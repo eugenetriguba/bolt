@@ -154,13 +154,23 @@ func (mr *MigrationRepo) Apply(migration *models.Migration) error {
 		return err
 	}
 
-	tx.Exec(string(contents))
-	tx.Exec(
+	_, err = tx.Exec(string(contents))
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(
 		`INSERT INTO bolt_migrations(version) VALUES ($1);`,
 		migration.Version,
 	)
+	if err != nil {
+		return err
+	}
 	migration.Applied = true
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
