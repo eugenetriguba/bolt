@@ -12,19 +12,19 @@ import (
 	"github.com/google/subcommands"
 )
 
-type MigrateCmd struct{}
+type ListCmd struct{}
 
-func (*MigrateCmd) Name() string     { return "migrate" }
-func (*MigrateCmd) Synopsis() string { return "Migrate the database to the latest migration." }
-func (*MigrateCmd) Usage() string {
-	return `migrate:
-	Migrate the database to the latest migration.
+func (*ListCmd) Name() string     { return "list" }
+func (*ListCmd) Synopsis() string { return "List the database migrations and their statuses." }
+func (*ListCmd) Usage() string {
+	return `list:
+	List the database migrations and their statuses.
   `
 }
 
-func (m *MigrateCmd) SetFlags(f *flag.FlagSet) {}
+func (m *ListCmd) SetFlags(f *flag.FlagSet) {}
 
-func (m *MigrateCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (m *ListCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	db, err := db.Connect()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -51,15 +51,7 @@ func (m *MigrateCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 	}
 
 	for _, migration := range migrations {
-		if !migration.Applied {
-			fmt.Printf("Applying migration for %s..\n", migration.Dirname())
-			err = migrationRepo.Apply(migration)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				return subcommands.ExitFailure
-			}
-			fmt.Printf("%s [x]\n", migration.Dirname())
-		}
+		fmt.Println(migration)
 	}
 
 	return subcommands.ExitSuccess

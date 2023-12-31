@@ -5,8 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/eugenetriguba/bolt/internal/config"
+	"github.com/eugenetriguba/bolt/internal/models"
 )
 
 type IsNotDirError struct {
@@ -57,18 +61,106 @@ func NewMigrationRepo(db *sql.DB, c *config.Config) (*MigrationRepo, error) {
 	return &MigrationRepo{db: db, config: c}, nil
 }
 
-func (mr *MigrationRepo) Create(message string) error {
+func (mr *MigrationRepo) Create(m *models.Migration) error {
+	path := filepath.Join(mr.config.MigrationsDir, m.Dirname())
+	err := os.Mkdir(path, 0755)
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Create(filepath.Join(path, "upgrade.sql"))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (mr *MigrationRepo) List() ([]*models.Migration, error) {
+	rows, err := mr.db.Query(`SELECT version FROM bolt_migrations;`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	migrations := make(map[string]*models.Migration)
+	for rows.Next() {
+		var version string
+		err := rows.Scan(&version)
+		if err != nil {
+			return nil, err
+		}
+		version = strings.TrimSpace(version)
+		migrations[version] = &models.Migration{
+			Version: version,
+			Message: "",
+			Applied: true,
+		}
+	}
+
+	entries, err := os.ReadDir(mr.config.MigrationsDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range entries {
+		parts := strings.SplitN(entry.Name(), "_", 2)
+		if len(parts) != 2 {
+			return nil, errors.New(
+				fmt.Sprintf(
+					"%s is an invalid migration name. Expected a "+
+						"migration directory of the format <version>_<message>.",
+					entry.Name(),
+				),
+			)
+		}
+		version := parts[0]
+		message := parts[1]
+		val, ok := migrations[version]
+		if ok {
+			val.Message = message
+		} else {
+			migrations[version] = &models.Migration{
+				Version: version,
+				Message: message,
+				Applied: false,
+			}
+		}
+	}
+
+	values := make([]*models.Migration, 0, len(migrations))
+	for _, value := range migrations {
+		values = append(values, value)
+	}
+
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Dirname() < values[j].Dirname()
+	})
+
+	return values, nil
+}
+
+func (mr *MigrationRepo) Apply(migration *models.Migration) error {
 	tx, err := mr.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	sqlStatement := `INSERT INTO applied_migration(version) VALUES ($1);`
-	_, err = mr.db.Exec(sqlStatement)
+	upgradeScriptPath := filepath.Join(
+		mr.config.MigrationsDir, migration.Dirname(), "upgrade.sql",
+	)
+	contents, err := os.ReadFile(upgradeScriptPath)
 	if err != nil {
 		return err
 	}
+
+	tx.Exec(string(contents))
+	tx.Exec(
+		`INSERT INTO bolt_migrations(version) VALUES ($1);`,
+		migration.Version,
+	)
+	migration.Applied = true
+	tx.Commit()
 
 	return nil
 }
