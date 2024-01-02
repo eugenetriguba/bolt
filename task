@@ -1,0 +1,70 @@
+#!/bin/sh
+set -e
+
+print_help() {
+    echo "Usage: ./task <command>"
+    echo ""
+    echo "Commands:"
+    echo "  help    Print this help message or help information for a specific command"
+    echo "  test    Run the go test suite for the repo"
+    echo ""
+    echo "For more information on a specific command, use './task help <command>'"
+}
+
+run_tests() {
+    docker compose --env-file .env.test up -d
+
+    if [ "$1" = "-cov" ]; then
+        go test -cover ./...
+    else
+        go test ./...
+    fi
+
+    docker compose --env-file .env.test down --volumes
+}
+
+print_help_command() {
+    case "$1" in
+    help)
+        echo "Usage: ./task help <command>"
+        echo ""
+        echo "Commands:"
+        echo "  help    Print this help message"
+        echo "  test    Run the go test suite for the repo"
+        ;;
+    test)
+        echo "Usage: ./task test [-cov]"
+        echo ""
+        echo "Options:"
+        echo "  -cov    Generate a coverage report"
+        ;;
+    *)
+        echo "Invalid command. Use 'help' to see available commands."
+        ;;
+    esac
+}
+
+main() {
+    if [ $# -eq 0 ]; then
+        print_help
+        exit 1
+    fi
+
+    case "$1" in
+    help)
+        if [ $# -eq 1 ]; then
+            print_help
+        else
+            print_help_command "$2"
+        fi
+        ;;
+    test)
+        run_tests "$2"
+        ;;
+    *)
+        echo "Invalid command. Use 'help' to see available commands."
+        ;;
+    esac
+}
+
+main "$@"

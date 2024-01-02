@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:16.1-alpine3.19
+    container_name: postgres_db
+    ports:
+      - "${DB_PORT:?err}:5432"
+    environment:
+      - POSTGRES_DB=${DB_NAME:?err}
+      - POSTGRES_USER=${DB_USERNAME:?err}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?err}
+    volumes:
+      - postgres_db_volume:/var/lib/postgresql/data
+
+volumes:
+  postgres_db_volume:
+    name: postgres-db-volume

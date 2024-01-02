@@ -1,0 +1,9 @@
+migrations_dir = "migrations"
+
+[connection]
+host     = "localhost"
+port     = 5839
+user     = "test_user"
+password = "testpassword"
+dbname   = "test_db"
+driver   = "postgres"
