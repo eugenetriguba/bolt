@@ -3,7 +3,8 @@ package models
 import (
 	"fmt"
 	"strings"
-	"time"
+
+	"github.com/eugenetriguba/bolt/internal/util"
 )
 
 type Migration struct {
@@ -12,8 +13,8 @@ type Migration struct {
 	Applied bool
 }
 
-func NewMigration(message string) *Migration {
-	now := time.Now()
+func NewMigration(clock util.Clock, message string) *Migration {
+	now := clock.Now()
 	version := fmt.Sprintf(
 		"%d%02d%02d%02d%02d%02d",
 		now.Year(), now.Month(), now.Day(),
@@ -27,11 +28,9 @@ func (m *Migration) Dirname() string {
 }
 
 func (m *Migration) normalizedMessage() string {
-	return strings.ReplaceAll(
-		strings.TrimSpace(strings.ToLower(m.Message)),
-		" ",
-		"_",
-	)
+	lowercaseMessage := strings.ToLower(m.Message)
+	trimmedMessage := strings.TrimSpace(lowercaseMessage)
+	return strings.ReplaceAll(trimmedMessage, " ", "_")
 }
 
 func (m *Migration) String() string {
@@ -40,10 +39,15 @@ func (m *Migration) String() string {
 		checked = "x"
 	}
 
+	message := m.normalizedMessage()
+	if len(message) > 0 {
+		message = fmt.Sprintf("- %s ", message)
+	}
+
 	return fmt.Sprintf(
-		"%s - %s - [%s]",
+		"%s %s- [%s]",
 		m.Version,
-		m.normalizedMessage(),
+		message,
 		checked,
 	)
 }
