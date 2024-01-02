@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   if it encounters an error while running a migration. Previously,
   it was silently failing.
 
+- `bolt_migrations` `version` column is now 14 characters long instead of 32.
+
 ## [0.1.0] - 2023-12-30
 
 ### Added

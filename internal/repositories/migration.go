@@ -39,7 +39,7 @@ type MigrationRepo struct {
 func NewMigrationRepo(db *sql.DB, c *config.Config) (*MigrationRepo, error) {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS bolt_migrations(
-			version CHARACTER(32) PRIMARY KEY NOT NULL
+			version CHARACTER(14) PRIMARY KEY NOT NULL
 		);
 	`)
 	if err != nil {
