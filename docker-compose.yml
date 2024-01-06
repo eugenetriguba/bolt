@@ -1,18 +1,38 @@
-version: '3.8'
+version: "3.8"
 
 services:
+  app:
+    image: eugenetriguba/bolt
+    container_name: bolt
+    command: sleep infinity
+    env_file:
+      - .env
+    build:
+      dockerfile: Dockerfile.test
+      context: .
+    volumes:
+      - ./:/app
+    networks:
+      - app
+    depends_on:
+      - postgres_db
+
   postgres_db:
     image: postgres:16.1-alpine3.19
-    container_name: postgres_db
-    ports:
-      - "${DB_PORT:?err}:5432"
+    container_name: bolt_postgres_db
     environment:
       - POSTGRES_DB=${DB_NAME:?err}
       - POSTGRES_USER=${DB_USERNAME:?err}
       - POSTGRES_PASSWORD=${DB_PASSWORD:?err}
     volumes:
       - postgres_db_volume:/var/lib/postgresql/data
+    networks:
+      - app
 
 volumes:
   postgres_db_volume:
     name: postgres-db-volume
+
+networks:
+  app:
+    name: app

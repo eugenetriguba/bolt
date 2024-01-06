@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"github.com/eugenetriguba/bolt/internal/db"
 	"github.com/eugenetriguba/bolt/internal/repositories"
+	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
 )
 
@@ -25,18 +25,21 @@ func (*MigrateCmd) Usage() string {
 func (m *MigrateCmd) SetFlags(f *flag.FlagSet) {}
 
 func (m *MigrateCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	db, err := db.Connect()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return subcommands.ExitFailure
-	}
-	defer db.Close()
-
 	cfg, err := configloader.NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
+
+	db, err := storage.DBConnect(
+		cfg.Connection.Driver,
+		storage.DBConnectionString(&cfg.Connection),
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return subcommands.ExitFailure
+	}
+	defer db.Close()
 
 	migrationRepo, err := repositories.NewMigrationRepo(db, cfg)
 	if err != nil {
