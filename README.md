@@ -1,10 +1,13 @@
-# Bolt
-
-> :warning: **This project is in early development. I wouldn't recommend using it.**
+<div align="center">
+  <img src="https://github.com/eugenetriguba/bolt/raw/main/docs/logo.png" width="150" />
+  <h1>Bolt</h1>
+</div>
 
 Bolt is a command-line tool that helps you manage your database migrations.
 It allows you to write your database migrations in plain SQL, and Bolt will
 handle ensuring they are applied and executed in the correct order.
+
+:warning: This project is in early development.
 
 ## Installation
 
