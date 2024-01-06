@@ -5,12 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/bolt/internal/storage"
-	"github.com/eugenetriguba/bolt/internal/util"
 	"github.com/google/subcommands"
 )
 
@@ -64,7 +64,7 @@ func (cmd *CreateCmd) Execute(
 		return subcommands.ExitFailure
 	}
 
-	migration := models.NewMigration(&util.RealClock{}, cmd.message)
+	migration := models.NewMigration(time.Now(), cmd.message)
 	err = migrationRepo.Create(migration)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

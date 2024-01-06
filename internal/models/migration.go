@@ -3,8 +3,7 @@ package models
 import (
 	"fmt"
 	"strings"
-
-	"github.com/eugenetriguba/bolt/internal/util"
+	"time"
 )
 
 type Migration struct {
@@ -13,12 +12,10 @@ type Migration struct {
 	Applied bool
 }
 
-func NewMigration(clock util.Clock, message string) *Migration {
-	now := clock.Now()
+func NewMigration(ts time.Time, message string) *Migration {
 	version := fmt.Sprintf(
-		"%d%02d%02d%02d%02d%02d",
-		now.Year(), now.Month(), now.Day(),
-		now.Hour(), now.Minute(), now.Second(),
+		"%d%02d%02d%02d%02d%02d", ts.Year(), ts.Month(), ts.Day(),
+		ts.Hour(), ts.Minute(), ts.Second(),
 	)
 	return &Migration{Version: version, Message: message, Applied: false}
 }
