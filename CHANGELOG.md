@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `BOLT_CONNECTION_DBNAME`
   - `BOLT_CONNECTION_DRIVER`
 
+- Support for Windows when looking up the user's bolt configuration file.
+  Previously, as the filesystem was traversed, it would look for "/" as the
+  root directory.
+
 ### Changed
 
 - The `migrate` command will now exit with a status code of 1
