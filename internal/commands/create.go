@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eugenetriguba/bolt/internal/config"
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/db"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
@@ -48,13 +48,13 @@ func (cmd *CreateCmd) Execute(
 		return subcommands.ExitFailure
 	}
 
-	c, err := config.NewConfig()
+	cfg, err := configloader.NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
-	migrationRepo, err := repositories.NewMigrationRepo(conn, c)
+	migrationRepo, err := repositories.NewMigrationRepo(conn, cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure

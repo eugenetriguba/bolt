@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eugenetriguba/bolt/internal/config"
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/db"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/google/subcommands"
@@ -32,13 +32,13 @@ func (m *ListCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) 
 	}
 	defer db.Close()
 
-	c, err := config.NewConfig()
+	cfg, err := configloader.NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
-	migrationRepo, err := repositories.NewMigrationRepo(db, c)
+	migrationRepo, err := repositories.NewMigrationRepo(db, cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure

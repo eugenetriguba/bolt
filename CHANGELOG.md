@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Support for environment variables to configure bolt. You may now use the TOML configuration
+  file and/or environment variables to specify the configuration options. The environment variables
+  will take precedence over any values set in the TOML configuration file.
+
+  New environment variables
+  - `BOLT_MIGRATIONS_DIR`
+  - `BOLT_CONNECTION_HOST`
+  - `BOLT_CONNECTION_PORT`
+  - `BOLT_CONNECTION_USER`
+  - `BOLT_CONNECTION_PASSWORD`
+  - `BOLT_CONNECTION_DBNAME`
+  - `BOLT_CONNECTION_DRIVER`
+
 ### Changed
 
 - The `migrate` command will now exit with a status code of 1

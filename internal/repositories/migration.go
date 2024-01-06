@@ -9,15 +9,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/eugenetriguba/bolt/internal/config"
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 )
 
-type IsNotDirError struct {
+type ErrIsNotDir struct {
 	path string
 }
 
-func (e *IsNotDirError) Error() string {
+func (e *ErrIsNotDir) Error() string {
 	return fmt.Sprintf(
 		"The specified migrations directory path '%s' is not a directory.",
 		e.path,
@@ -28,15 +28,15 @@ type MigrationRepo struct {
 	// The database connection that will be used
 	// to look up migrations that have already been
 	// applied.
-	db     *sql.DB
-	config *config.Config
+	db  *sql.DB
+	cfg *configloader.Config
 }
 
 // Create a new Migration Repo.
 //
 // This handles the interactions with applying
 // and reverting migrations.
-func NewMigrationRepo(db *sql.DB, c *config.Config) (*MigrationRepo, error) {
+func NewMigrationRepo(db *sql.DB, cfg *configloader.Config) (*MigrationRepo, error) {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS bolt_migrations(
 			version CHARACTER(14) PRIMARY KEY NOT NULL
@@ -46,23 +46,23 @@ func NewMigrationRepo(db *sql.DB, c *config.Config) (*MigrationRepo, error) {
 		return nil, err
 	}
 
-	fileInfo, err := os.Stat(c.MigrationsDir)
+	fileInfo, err := os.Stat(cfg.MigrationsDir)
 	if errors.Is(err, os.ErrNotExist) {
-		err = os.MkdirAll(c.MigrationsDir, 0755)
+		err = os.MkdirAll(cfg.MigrationsDir, 0755)
 		if err != nil {
 			return nil, err
 		}
 	} else if err != nil {
 		return nil, err
 	} else if err == nil && !fileInfo.IsDir() {
-		return nil, &IsNotDirError{path: c.MigrationsDir}
+		return nil, &ErrIsNotDir{path: cfg.MigrationsDir}
 	}
 
-	return &MigrationRepo{db: db, config: c}, nil
+	return &MigrationRepo{db: db, cfg: cfg}, nil
 }
 
 func (mr *MigrationRepo) Create(m *models.Migration) error {
-	path := filepath.Join(mr.config.MigrationsDir, m.Dirname())
+	path := filepath.Join(mr.cfg.MigrationsDir, m.Dirname())
 	err := os.Mkdir(path, 0755)
 	if err != nil {
 		return err
@@ -98,7 +98,7 @@ func (mr *MigrationRepo) List() ([]*models.Migration, error) {
 		}
 	}
 
-	entries, err := os.ReadDir(mr.config.MigrationsDir)
+	entries, err := os.ReadDir(mr.cfg.MigrationsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (mr *MigrationRepo) Apply(migration *models.Migration) error {
 	defer tx.Rollback()
 
 	upgradeScriptPath := filepath.Join(
-		mr.config.MigrationsDir, migration.Dirname(), "upgrade.sql",
+		mr.cfg.MigrationsDir, migration.Dirname(), "upgrade.sql",
 	)
 	contents, err := os.ReadFile(upgradeScriptPath)
 	if err != nil {

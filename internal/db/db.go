@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/eugenetriguba/bolt/internal/config"
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	_ "github.com/lib/pq"
 )
 
@@ -17,7 +17,7 @@ var db *sql.DB
 // handle.
 func Connect() (*sql.DB, error) {
 	if db == nil {
-		config, err := config.NewConfig()
+		config, err := configloader.NewConfig()
 		if err != nil {
 			return nil, err
 		}

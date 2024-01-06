@@ -8,6 +8,9 @@ github.com/davecgh/go-spew/spew
 # github.com/google/subcommands v1.2.0
 ## explicit
 github.com/google/subcommands
+# github.com/kelseyhightower/envconfig v1.4.0
+## explicit
+github.com/kelseyhightower/envconfig
 # github.com/lib/pq v1.10.9
 ## explicit; go 1.13
 github.com/lib/pq
