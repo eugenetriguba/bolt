@@ -10,7 +10,7 @@ import (
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
-	"github.com/eugenetriguba/bolt/internal/storage"
+	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/google/subcommands"
 )
 
@@ -48,24 +48,20 @@ func (cmd *CreateCmd) Execute(
 		return subcommands.ExitFailure
 	}
 
-	db, err := storage.DBConnect(
-		cfg.Connection.Driver,
-		storage.DBConnectionString(&cfg.Connection),
-	)
+	migrationFsRepo, err := repositories.NewMigrationFsRepo(cfg.MigrationsDir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
-	defer db.Close()
 
-	migrationRepo, err := repositories.NewMigrationRepo(db, cfg)
+	migrationService := services.NewMigrationService(nil, migrationFsRepo)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
 	migration := models.NewMigration(time.Now(), cmd.message)
-	err = migrationRepo.Create(migration)
+	err = migrationService.CreateMigration(migration)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure

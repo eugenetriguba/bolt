@@ -12,19 +12,16 @@ type Migration struct {
 	Applied bool
 }
 
-func NewMigration(ts time.Time, message string) *Migration {
+func NewMigration(timestamp time.Time, message string) *Migration {
 	version := fmt.Sprintf(
-		"%d%02d%02d%02d%02d%02d", ts.Year(), ts.Month(), ts.Day(),
-		ts.Hour(), ts.Minute(), ts.Second(),
+		"%d%02d%02d%02d%02d%02d",
+		timestamp.Year(), timestamp.Month(), timestamp.Day(),
+		timestamp.Hour(), timestamp.Minute(), timestamp.Second(),
 	)
 	return &Migration{Version: version, Message: message, Applied: false}
 }
 
-func (m *Migration) Dirname() string {
-	return fmt.Sprintf("%s_%s", m.Version, m.normalizedMessage())
-}
-
-func (m *Migration) normalizedMessage() string {
+func (m *Migration) NormalizedMessage() string {
 	lowercaseMessage := strings.ToLower(m.Message)
 	trimmedMessage := strings.TrimSpace(lowercaseMessage)
 	return strings.ReplaceAll(trimmedMessage, " ", "_")
@@ -36,7 +33,7 @@ func (m *Migration) String() string {
 		checked = "x"
 	}
 
-	message := m.normalizedMessage()
+	message := m.NormalizedMessage()
 	if len(message) > 0 {
 		message = fmt.Sprintf("- %s ", message)
 	}

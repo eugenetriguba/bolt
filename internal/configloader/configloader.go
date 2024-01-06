@@ -38,12 +38,12 @@ type Config struct {
 }
 
 type ConnectionConfig struct {
-	Host     string `toml:"host" envconfig:"BOLT_CONNECTION_HOST"`
-	Port     int    `toml:"port" envconfig:"BOLT_CONNECTION_PORT"`
-	User     string `toml:"user" envconfig:"BOLT_CONNECTION_USER"`
+	Host     string `toml:"host"     envconfig:"BOLT_CONNECTION_HOST"`
+	Port     int    `toml:"port"     envconfig:"BOLT_CONNECTION_PORT"`
+	User     string `toml:"user"     envconfig:"BOLT_CONNECTION_USER"`
 	Password string `toml:"password" envconfig:"BOLT_CONNECTION_PASSWORD"`
-	DBName   string `toml:"dbname" envconfig:"BOLT_CONNECTION_DBNAME"`
-	Driver   string `toml:"driver" envconfig:"BOLT_CONNECTION_DRIVER"`
+	DBName   string `toml:"dbname"   envconfig:"BOLT_CONNECTION_DBNAME"`
+	Driver   string `toml:"driver"   envconfig:"BOLT_CONNECTION_DRIVER"`
 }
 
 func NewConfig() (*Config, error) {

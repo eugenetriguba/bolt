@@ -8,13 +8,15 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/repositories"
+	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
 )
 
 type ListCmd struct{}
 
-func (*ListCmd) Name() string     { return "list" }
+func (*ListCmd) Name() string { return "list" }
+
 func (*ListCmd) Synopsis() string { return "List the database migrations and their statuses." }
 func (*ListCmd) Usage() string {
 	return `list:
@@ -24,7 +26,11 @@ func (*ListCmd) Usage() string {
 
 func (m *ListCmd) SetFlags(f *flag.FlagSet) {}
 
-func (m *ListCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (m *ListCmd) Execute(
+	_ context.Context,
+	f *flag.FlagSet,
+	_ ...interface{},
+) subcommands.ExitStatus {
 	cfg, err := configloader.NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -41,13 +47,20 @@ func (m *ListCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) 
 	}
 	defer db.Close()
 
-	migrationRepo, err := repositories.NewMigrationRepo(db, cfg)
+	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
-	migrations, err := migrationRepo.List()
+	migrationFsRepo, err := repositories.NewMigrationFsRepo(cfg.MigrationsDir)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return subcommands.ExitFailure
+	}
+
+	migrationService := services.NewMigrationService(migrationDBRepo, migrationFsRepo)
+	migrations, err := migrationService.ListMigrations(services.SortOrderAsc)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
