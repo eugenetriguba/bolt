@@ -8,8 +8,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// DBConnect to the database using the driver and connection
-// information.
+// DBConnect establishes a connection to the database using the driver
+// and connection information.
+//
+// Note that only "postgres" is supported as the driver right now.
 func DBConnect(driver string, connectionInfo string) (*sql.DB, error) {
 	db, err := sql.Open(driver, connectionInfo)
 	if err != nil {
@@ -29,9 +31,8 @@ func DBConnect(driver string, connectionInfo string) (*sql.DB, error) {
 }
 
 // DBConnectionString generates a properly formatted connection
-// string to be passed to a database management system to initiate
-// a connection. It uses the passed in configuration values to create
-// the string. Note that sslmode is always disabled.
+// string that can be used to establish a database connection.
+// Note that it always creates a connection string with sslmode disabled.
 func DBConnectionString(cfg *configloader.ConnectionConfig) string {
 	return fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",

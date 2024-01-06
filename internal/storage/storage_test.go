@@ -51,24 +51,20 @@ func TestDBConnectUnsupportedDriver(t *testing.T) {
 }
 
 func TestDBConnectionString(t *testing.T) {
-	cfg := configloader.Config{
-		MigrationsDir: "",
-		Connection: configloader.ConnectionConfig{
-			Driver:   "postgres",
-			Host:     "db1",
-			Port:     5432,
-			User:     "testuser",
-			Password: "supersecretpassword",
-			DBName:   "testdb",
-		},
+	cfg := configloader.ConnectionConfig{
+		Driver:   "postgres",
+		Host:     "db1",
+		Port:     5432,
+		User:     "testuser",
+		Password: "supersecretpassword",
+		DBName:   "testdb",
 	}
 	expectedConnectionString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Connection.Host, cfg.Connection.Port, cfg.Connection.User,
-		cfg.Connection.Password, cfg.Connection.DBName,
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName,
 	)
 
-	cs := storage.DBConnectionString(&cfg.Connection)
+	cs := storage.DBConnectionString(&cfg)
 
 	if cs != expectedConnectionString {
 		t.Fatalf("Expected %s, got %s", expectedConnectionString, cs)
