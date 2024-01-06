@@ -35,9 +35,6 @@ func TestMigration(t *testing.T) {
 			expectedVersion: "20200101000000",
 			expectedDirname: "20200101000000_",
 			expectedString:  "20200101000000 - [ ]",
-		},
-		{
-
 		}
 	}
 
