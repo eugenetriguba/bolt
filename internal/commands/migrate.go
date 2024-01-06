@@ -8,13 +8,15 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/repositories"
+	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
 )
 
 type MigrateCmd struct{}
 
-func (*MigrateCmd) Name() string     { return "migrate" }
+func (*MigrateCmd) Name() string { return "migrate" }
+
 func (*MigrateCmd) Synopsis() string { return "Migrate the database to the latest migration." }
 func (*MigrateCmd) Usage() string {
 	return `migrate:
@@ -41,28 +43,22 @@ func (m *MigrateCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{
 	}
 	defer db.Close()
 
-	migrationRepo, err := repositories.NewMigrationRepo(db, cfg)
+	migrationRepo, err := repositories.NewMigrationRepo(db)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
-	migrations, err := migrationRepo.List()
+	migrationService, err := services.NewMigrationService(migrationRepo, cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
-	for _, migration := range migrations {
-		if !migration.Applied {
-			fmt.Printf("Applying migration for %s..\n", migration.Dirname())
-			err = migrationRepo.Apply(migration)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				return subcommands.ExitFailure
-			}
-			fmt.Printf("%s [x]\n", migration.Dirname())
-		}
+	err = migrationService.ApplyAllMigrations()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return subcommands.ExitFailure
 	}
 
 	return subcommands.ExitSuccess

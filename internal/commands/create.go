@@ -10,6 +10,7 @@ import (
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
+	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
 )
@@ -37,11 +38,7 @@ func (cmd *CreateCmd) SetFlags(f *flag.FlagSet) {
 	)
 }
 
-func (cmd *CreateCmd) Execute(
-	_ context.Context,
-	f *flag.FlagSet,
-	_ ...interface{},
-) subcommands.ExitStatus {
+func (cmd *CreateCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	cfg, err := configloader.NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -58,14 +55,20 @@ func (cmd *CreateCmd) Execute(
 	}
 	defer db.Close()
 
-	migrationRepo, err := repositories.NewMigrationRepo(db, cfg)
+	migrationRepo, err := repositories.NewMigrationRepo(db)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return subcommands.ExitFailure
+	}
+
+	migrationService, err := services.NewMigrationService(migrationRepo, cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
 	}
 
 	migration := models.NewMigration(time.Now(), cmd.message)
-	err = migrationRepo.Create(migration)
+	err = migrationService.CreateMigration(migration)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
