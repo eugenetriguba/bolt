@@ -52,7 +52,7 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	cfg := &Config{}
+	cfg := Config{}
 	_, err = toml.DecodeFile(filePath, &cfg)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func NewConfig() (*Config, error) {
 		cfg.MigrationsDir = "migrations"
 	}
 
-	return cfg, nil
+	return &cfg, nil
 }
 
 func findConfigFilePath() (filePath string, err error) {
