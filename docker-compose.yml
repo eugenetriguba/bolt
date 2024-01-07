@@ -19,6 +19,7 @@ services:
 
   postgres_db:
     image: postgres:16.1-alpine3.19
+    platform: linux/x86_64
     container_name: bolt_postgres_db
     environment:
       - POSTGRES_DB=${DB_NAME:?err}
