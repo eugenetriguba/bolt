@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -21,19 +20,13 @@ func NewMigration(timestamp time.Time, message string) *Migration {
 	return &Migration{Version: version, Message: message, Applied: false}
 }
 
-func (m *Migration) NormalizedMessage() string {
-	lowercaseMessage := strings.ToLower(m.Message)
-	trimmedMessage := strings.TrimSpace(lowercaseMessage)
-	return strings.ReplaceAll(trimmedMessage, " ", "_")
-}
-
 func (m *Migration) String() string {
-	checked := " "
+	checkmark := " "
 	if m.Applied {
-		checked = "x"
+		checkmark = "x"
 	}
 
-	message := m.NormalizedMessage()
+	message := m.Message
 	if len(message) > 0 {
 		message = fmt.Sprintf("- %s ", message)
 	}
@@ -42,6 +35,6 @@ func (m *Migration) String() string {
 		"%s %s- [%s]",
 		m.Version,
 		message,
-		checked,
+		checkmark,
 	)
 }

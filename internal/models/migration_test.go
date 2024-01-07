@@ -27,14 +27,7 @@ func TestAppliedNewMigration(t *testing.T) {
 	assert.Equal(t, m.String(), "20200101000000 - test_message - [x]")
 }
 
-func TestNewMigrationMessageIsNormalized(t *testing.T) {
-	m := models.NewMigration(timestamp, "  test MESSAGE  ")
-	assert.Equal(t, m.NormalizedMessage(), "test_message")
-}
-
 func TestEmptyMessageMigration(t *testing.T) {
 	m := models.NewMigration(timestamp, "")
-
-	assert.Equal(t, "", m.NormalizedMessage())
 	assert.Equal(t, "20200101000000 - [ ]", m.String())
 }

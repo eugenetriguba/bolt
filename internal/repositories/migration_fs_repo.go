@@ -41,11 +41,8 @@ func NewMigrationFsRepo(migrationsDirPath string) (*MigrationFsRepo, error) {
 	return &MigrationFsRepo{migrationsDirPath: migrationsDirPath}, nil
 }
 
-func (mr *MigrationFsRepo) Create(m *models.Migration) error {
-	path := filepath.Join(
-		mr.migrationsDirPath,
-		fmt.Sprintf("%s_%s", m.Version, m.NormalizedMessage()),
-	)
+func (mr *MigrationFsRepo) Create(migration *models.Migration) error {
+	path := filepath.Join(mr.migrationsDirPath, mr.migrationDirname(migration))
 
 	_, err := os.Create(filepath.Join(path, "upgrade.sql"))
 	if err != nil {
@@ -89,7 +86,7 @@ func (mr *MigrationFsRepo) List() (map[string]*models.Migration, error) {
 func (mr *MigrationFsRepo) ReadUpgradeScript(migration *models.Migration) (string, error) {
 	upgradeScriptPath := filepath.Join(
 		mr.migrationsDirPath,
-		fmt.Sprintf("%s_%s", migration.Version, migration.NormalizedMessage()),
+		mr.migrationDirname(migration),
 		"upgrade.sql",
 	)
 	return mr.readScriptContents(upgradeScriptPath)
@@ -98,7 +95,7 @@ func (mr *MigrationFsRepo) ReadUpgradeScript(migration *models.Migration) (strin
 func (mr *MigrationFsRepo) ReadDowngradeScript(migration *models.Migration) (string, error) {
 	downgradeScriptPath := filepath.Join(
 		mr.migrationsDirPath,
-		fmt.Sprintf("%s_%s", migration.Version, migration.NormalizedMessage()),
+		mr.migrationDirname(migration),
 		"downgrade.sql",
 	)
 	return mr.readScriptContents(downgradeScriptPath)
@@ -111,4 +108,19 @@ func (mr *MigrationFsRepo) readScriptContents(scriptPath string) (string, error)
 	}
 
 	return string(contents), nil
+}
+
+// migrationDirname creates the directory name that
+// should be used for this migration.
+func (mr *MigrationFsRepo) migrationDirname(migration *models.Migration) string {
+	return fmt.Sprintf("%s_%s", migration.Version, mr.normalizeMessage(migration))
+}
+
+// normalizeMessage normalizes the Message of a migration
+// to be filesystem friendly.
+func (mr *MigrationFsRepo) normalizeMessage(migration *models.Migration) string {
+	message := strings.ToLower(migration.Message)
+	message = strings.TrimSpace(message)
+	message = strings.ReplaceAll(message, " ", "_")
+	return message
 }
