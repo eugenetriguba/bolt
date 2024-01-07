@@ -97,6 +97,9 @@ func findConfigFilePath() (filePath string, err error) {
 	}
 }
 
+// fsRootDir retrieves the root directory
+// of the filesystem on Windows or any unix-like
+// operating system.
 func fsRootDir() string {
 	if runtime.GOOS == "windows" {
 		return os.Getenv("SystemDrive")
