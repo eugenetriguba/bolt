@@ -1,6 +1,7 @@
 package configloader_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -10,17 +11,17 @@ import (
 )
 
 func TestNewConfigMigrationsDirDefault(t *testing.T) {
+	changeCwd(t, os.TempDir())
+
 	cfg, err := configloader.NewConfig()
-	if err != nil {
-		t.Fatalf("%s occurred during new config", err)
-	}
+	assert.NilError(t, err)
 
 	assert.Equal(t, cfg.MigrationsDir, "migrations")
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 	expectedCfg := configloader.Config{
-		MigrationsDir: "migrations",
+		MigrationsDir: "myfancymigrations",
 		Connection: configloader.ConnectionConfig{
 			Host:     "testhost",
 			Port:     1234,
@@ -30,48 +31,87 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 			Driver:   "postgres",
 		},
 	}
-	err := createConfigFile(t, &expectedCfg, "bolt.toml")
-	if err != nil {
-		t.Fatalf("%s occurred during config file creation", err)
-	}
+	createConfigFile(t, &expectedCfg, "bolt.toml")
 
 	cfg, err := configloader.NewConfig()
-	if err != nil {
-		t.Fatalf("%s occurred during new config", err)
-	}
-
+	assert.NilError(t, err)
 	assert.DeepEqual(t, *cfg, expectedCfg)
 }
 
-func createConfigFile(t *testing.T, cfg *configloader.Config, filePath string) error {
-	f, err := createTempFile(t, filePath)
-	if err != nil {
-		return err
+func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
+	fileCfg := configloader.Config{
+		MigrationsDir: "cfgmigrations",
+		Connection: configloader.ConnectionConfig{
+			Host:     "testhost",
+			Port:     1234,
+			User:     "testuser",
+			Password: "testpassword",
+			DBName:   "testdb",
+			Driver:   "mysql",
+		},
 	}
+	createConfigFile(t, &fileCfg, "bolt.toml")
 
-	encoder := toml.NewEncoder(f)
-	err = encoder.Encode(cfg)
-	if err != nil {
-		return err
+	envCfg := configloader.Config{
+		MigrationsDir: "envmigrations",
+		Connection: configloader.ConnectionConfig{
+			Host:     "envtesthost",
+			Port:     4321,
+			User:     "envtestuser",
+			Password: "envtestpassword",
+			DBName:   "envtestdb",
+			Driver:   "postgres",
+		},
 	}
+	t.Setenv("BOLT_MIGRATIONS_DIR", envCfg.MigrationsDir)
+	t.Setenv("BOLT_CONNECTION_HOST", envCfg.Connection.Host)
+	t.Setenv("BOLT_CONNECTION_PORT", fmt.Sprintf("%d", envCfg.Connection.Port))
+	t.Setenv("BOLT_CONNECTION_USER", envCfg.Connection.User)
+	t.Setenv("BOLT_CONNECTION_PASSWORD", envCfg.Connection.Password)
+	t.Setenv("BOLT_CONNECTION_DBNAME", envCfg.Connection.DBName)
+	t.Setenv("BOLT_CONNECTION_DRIVER", envCfg.Connection.Driver)
 
-	err = f.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	cfg, err := configloader.NewConfig()
+	assert.NilError(t, err)
+	assert.DeepEqual(t, *cfg, envCfg)
 }
 
-func createTempFile(t *testing.T, filePath string) (*os.File, error) {
+func createConfigFile(t *testing.T, cfg *configloader.Config, filePath string) {
+	f := createTempFile(t, filePath)
+
+	encoder := toml.NewEncoder(f)
+	err := encoder.Encode(cfg)
+	assert.NilError(t, err)
+
+	err = f.Close()
+	assert.NilError(t, err)
+}
+
+func createTempFile(t *testing.T, filePath string) *os.File {
 	f, err := os.Create(filePath)
-	if err != nil {
-		return nil, err
-	}
+	assert.NilError(t, err)
 
 	t.Cleanup(func() {
-		os.Remove(f.Name())
+		err = os.Remove(f.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
 
-	return f, nil
+	return f
+}
+
+func changeCwd(t *testing.T, path string) {
+	dir, err := os.Getwd()
+	assert.NilError(t, err)
+
+	err = os.Chdir(path)
+	assert.NilError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }

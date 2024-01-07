@@ -14,23 +14,14 @@ func TestNewConfigUnixSearchesToRootFilePath(t *testing.T) {
 	expectedCfg := configloader.Config{
 		MigrationsDir: "differentmigrationsdir",
 	}
-	err := createConfigFile(t, &expectedCfg, "/bolt.toml")
-	if err != nil {
-		t.Fatal(err)
-	}
+	createConfigFile(t, &expectedCfg, "/bolt.toml")
+
 	homedir, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Chdir(homedir)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NilError(t, err)
+	changeCwd(t, homedir)
 
 	cfg, err := configloader.NewConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NilError(t, err)
 
 	assert.DeepEqual(t, *cfg, expectedCfg)
 }

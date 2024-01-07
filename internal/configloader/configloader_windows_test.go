@@ -16,23 +16,15 @@ func TestNewConfigWindowsSearchesToRootFilePath(t *testing.T) {
 		MigrationsDir: "differentmigrationsdir",
 	}
 	configPath := filepath.Join(os.Getenv("SystemDrive"), "bolt.toml")
-	err := createConfigFile(t, &expectedCfg, configPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	createConfigFile(t, &expectedCfg, configPath)
+	assert.NilError(t, err)
+
 	homedir, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Chdir(homedir)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NilError(t, err)
+	changeCwd(t, homedir)
 
 	cfg, err := configloader.NewConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NilError(t, err)
 
 	assert.DeepEqual(t, *cfg, expectedCfg)
 }

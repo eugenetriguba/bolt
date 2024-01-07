@@ -52,19 +52,17 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	cfg := Config{}
-	_, err = toml.DecodeFile(filePath, &cfg)
-	if err != nil {
-		return nil, err
+	cfg := Config{MigrationsDir: "migrations"}
+	if !errors.Is(err, errConfigFileNotFound) {
+		_, err = toml.DecodeFile(filePath, &cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = envconfig.Process("", &cfg)
 	if err != nil {
 		return nil, err
-	}
-
-	if cfg.MigrationsDir == "" {
-		cfg.MigrationsDir = "migrations"
 	}
 
 	return &cfg, nil
