@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/BurntSushi/toml"
+	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"gotest.tools/v3/assert"
 )
 
 func TestNewConfigMigrationsDirDefault(t *testing.T) {
-	changeCwd(t, os.TempDir())
+	bolttest.ChangeCwd(t, os.TempDir())
 
 	cfg, err := configloader.NewConfig()
 	assert.NilError(t, err)
@@ -31,7 +31,7 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 			Driver:   "postgres",
 		},
 	}
-	createConfigFile(t, &expectedCfg, "bolt.toml")
+	bolttest.CreateConfigFile(t, &expectedCfg, "bolt.toml")
 
 	cfg, err := configloader.NewConfig()
 	assert.NilError(t, err)
@@ -50,7 +50,7 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 			Driver:   "mysql",
 		},
 	}
-	createConfigFile(t, &fileCfg, "bolt.toml")
+	bolttest.CreateConfigFile(t, &fileCfg, "bolt.toml")
 
 	envCfg := configloader.Config{
 		MigrationsDir: "envmigrations",
@@ -74,44 +74,4 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	cfg, err := configloader.NewConfig()
 	assert.NilError(t, err)
 	assert.DeepEqual(t, *cfg, envCfg)
-}
-
-func createConfigFile(t *testing.T, cfg *configloader.Config, filePath string) {
-	f := createTempFile(t, filePath)
-
-	encoder := toml.NewEncoder(f)
-	err := encoder.Encode(cfg)
-	assert.NilError(t, err)
-
-	err = f.Close()
-	assert.NilError(t, err)
-}
-
-func createTempFile(t *testing.T, filePath string) *os.File {
-	f, err := os.Create(filePath)
-	assert.NilError(t, err)
-
-	t.Cleanup(func() {
-		err = os.Remove(f.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	return f
-}
-
-func changeCwd(t *testing.T, path string) {
-	dir, err := os.Getwd()
-	assert.NilError(t, err)
-
-	err = os.Chdir(path)
-	assert.NilError(t, err)
-
-	t.Cleanup(func() {
-		err = os.Chdir(dir)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
 }

@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/storage"
-	"github.com/eugenetriguba/bolt/internal/storage/dbtest"
 	"gotest.tools/v3/assert"
 )
 
 func TestDBConnectWithPostgres(t *testing.T) {
-	cfg, err := dbtest.NewTestConnectionConfig("postgres")
+	cfg, err := bolttest.NewTestConnectionConfig("postgres")
 	assert.NilError(t, err)
 
 	conn, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
@@ -28,7 +28,7 @@ func TestDBConnectMalformedConnectionString(t *testing.T) {
 }
 
 func TestDBConnectUnsupportedDriver(t *testing.T) {
-	cfg, err := dbtest.NewTestConnectionConfig("redis")
+	cfg, err := bolttest.NewTestConnectionConfig("redis")
 	assert.NilError(t, err)
 
 	_, err = storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
