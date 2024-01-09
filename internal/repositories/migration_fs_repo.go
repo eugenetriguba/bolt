@@ -42,14 +42,19 @@ func NewMigrationFsRepo(migrationsDirPath string) (*MigrationFsRepo, error) {
 }
 
 func (mr *MigrationFsRepo) Create(migration *models.Migration) error {
-	path := filepath.Join(mr.migrationsDirPath, mr.migrationDirname(migration))
+	newMigrationDir := filepath.Join(mr.migrationsDirPath, mr.migrationDirname(migration))
 
-	_, err := os.Create(filepath.Join(path, "upgrade.sql"))
+	err := os.Mkdir(newMigrationDir, 0755)
 	if err != nil {
 		return err
 	}
 
-	_, err = os.Create(filepath.Join(path, "downgrade.sql"))
+	_, err = os.Create(filepath.Join(newMigrationDir, "upgrade.sql"))
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Create(filepath.Join(newMigrationDir, "downgrade.sql"))
 	if err != nil {
 		return err
 	}
