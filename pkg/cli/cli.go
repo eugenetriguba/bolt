@@ -13,7 +13,8 @@ func Run() int {
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
 	subcommands.Register(&commands.CreateCmd{}, "")
-	subcommands.Register(&commands.MigrateCmd{}, "")
+	subcommands.Register(&commands.UpgradeCmd{}, "")
+	subcommands.Register(&commands.DowngradeCmd{}, "")
 	subcommands.Register(&commands.ListCmd{}, "")
 
 	flag.Parse()

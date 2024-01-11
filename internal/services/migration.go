@@ -55,6 +55,21 @@ func (ms *MigrationService) ApplyMigration(migration *models.Migration) error {
 	return nil
 }
 
+func (ms *MigrationService) RevertAllMigrations() error {
+	migrations, err := ms.ListMigrations(SortOrderDesc)
+	if err != nil {
+		return err
+	}
+
+	for _, migration := range migrations {
+		if migration.Applied {
+			ms.RevertMigration(migration)
+		}
+	}
+
+	return nil
+}
+
 func (ms *MigrationService) RevertMigration(migration *models.Migration) error {
 	scriptContents, err := ms.fsRepo.ReadDowngradeScript(migration)
 	if err != nil {

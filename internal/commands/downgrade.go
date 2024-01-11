@@ -13,20 +13,20 @@ import (
 	"github.com/google/subcommands"
 )
 
-type UpgradeCmd struct{}
+type DowngradeCmd struct{}
 
-func (*UpgradeCmd) Name() string { return "upgrade" }
+func (*DowngradeCmd) Name() string { return "downgrade" }
 
-func (*UpgradeCmd) Synopsis() string { return "Upgrade the database to the latest migration." }
-func (*UpgradeCmd) Usage() string {
-	return `upgrade:
-	Upgrade the database to the latest migration.
+func (*DowngradeCmd) Synopsis() string { return "Downgrade all migrations against the database." }
+func (*DowngradeCmd) Usage() string {
+	return `downgrade:
+	Downgrade all migrations against the database.
   `
 }
 
-func (m *UpgradeCmd) SetFlags(f *flag.FlagSet) {}
+func (m *DowngradeCmd) SetFlags(f *flag.FlagSet) {}
 
-func (m *UpgradeCmd) Execute(
+func (m *DowngradeCmd) Execute(
 	_ context.Context,
 	f *flag.FlagSet,
 	_ ...interface{},
@@ -60,7 +60,7 @@ func (m *UpgradeCmd) Execute(
 	}
 
 	migrationService := services.NewMigrationService(migrationDBRepo, migrationFsRepo)
-	err = migrationService.ApplyAllMigrations()
+	err = migrationService.RevertAllMigrations()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return subcommands.ExitFailure
