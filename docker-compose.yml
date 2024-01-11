@@ -12,8 +12,6 @@ services:
       context: .
     volumes:
       - ./:/app
-    networks:
-      - app
     depends_on:
       - postgres_db
 
@@ -26,13 +24,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:?err}
     volumes:
       - postgres_db_volume:/var/lib/postgresql/data
-    networks:
-      - app
 
 volumes:
   postgres_db_volume:
     name: postgres-db-volume
-
-networks:
-  app:
-    name: app

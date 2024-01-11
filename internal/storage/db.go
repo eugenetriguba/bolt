@@ -12,8 +12,8 @@ import (
 // and connection information.
 //
 // Note that only "postgres" is supported as the driver right now.
-func DBConnect(driver string, connectionInfo string) (*sql.DB, error) {
-	db, err := sql.Open(driver, connectionInfo)
+func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
+	db, err := sql.Open(driver, connectionParams)
 	if err != nil {
 		return nil, err
 	}
