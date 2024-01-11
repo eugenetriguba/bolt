@@ -11,16 +11,11 @@ handle ensuring they are applied and executed in the correct order.
 
 ## Installation
 
-You may install Bolt from source using the following commands:
+You may install Bolt using the following command:
 
 ```bash
-$ git clone github.com/eugenetriguba/bolt
-$ cd bolt
-$ GOBIN=/usr/local/bin/ go install ./cmd/bolt/bolt.go
+$ go install github.com/eugenetriguba/bolt@latest
 ```
-
-This will install a `bolt` binary under `/usr/local/bin/` that you may
-then use by running `bolt` from a command-line.
 
 ## Database Compatibility
 
