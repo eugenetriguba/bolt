@@ -11,8 +11,7 @@ import (
 )
 
 func TestDBConnectWithPostgres(t *testing.T) {
-	cfg, err := bolttest.NewTestConnectionConfig("postgres")
-	assert.NilError(t, err)
+	cfg := bolttest.NewTestConnectionConfig(t, "postgres")
 
 	conn, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
 	assert.NilError(t, err)
@@ -28,10 +27,9 @@ func TestDBConnectMalformedConnectionString(t *testing.T) {
 }
 
 func TestDBConnectUnsupportedDriver(t *testing.T) {
-	cfg, err := bolttest.NewTestConnectionConfig("redis")
-	assert.NilError(t, err)
+	cfg := bolttest.NewTestConnectionConfig(t, "redis")
 
-	_, err = storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
+	_, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
 	assert.ErrorContains(t, err, `unknown driver "redis"`)
 }
 

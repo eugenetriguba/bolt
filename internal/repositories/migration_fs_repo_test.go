@@ -63,9 +63,17 @@ func TestMigrationFsRepoReadUpgradeAndDowngradeScript(t *testing.T) {
 
 	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
 	expectedUpgradeScriptContents := []byte("CREATE TABLE users(id int PRIMARY KEY);")
-	os.WriteFile(filepath.Join(tempDir, migrationDirName, "upgrade.sql"), expectedUpgradeScriptContents, 0755)
+	os.WriteFile(
+		filepath.Join(tempDir, migrationDirName, "upgrade.sql"),
+		expectedUpgradeScriptContents,
+		0755,
+	)
 	expectedDowngradeScriptContents := []byte("DROP TABLE users;")
-	os.WriteFile(filepath.Join(tempDir, migrationDirName, "downgrade.sql"), expectedDowngradeScriptContents, 0755)
+	os.WriteFile(
+		filepath.Join(tempDir, migrationDirName, "downgrade.sql"),
+		expectedDowngradeScriptContents,
+		0755,
+	)
 
 	upgradeScriptContents, err := repo.ReadUpgradeScript(migration)
 	assert.NilError(t, err)

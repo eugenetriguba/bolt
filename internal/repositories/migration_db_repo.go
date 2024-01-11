@@ -47,8 +47,9 @@ func (mr *MigrationDBRepo) List() (map[string]*models.Migration, error) {
 		if err != nil {
 			return nil, err
 		}
-		migrations[version] = &models.Migration{
-			Version: strings.TrimSpace(version),
+		trimmedVersion := strings.TrimSpace(version)
+		migrations[trimmedVersion] = &models.Migration{
+			Version: trimmedVersion,
 			// Note: We don't store the user-friendly message for
 			// the migration in the database. It's purely for the
 			// user to understand what the migration was locally.
@@ -67,7 +68,8 @@ func (mr *MigrationDBRepo) List() (map[string]*models.Migration, error) {
 // Check err first before looking at whether the version is applied.
 func (mr *MigrationDBRepo) IsApplied(version string) (applied bool, err error) {
 	row := mr.db.QueryRow(`SELECT 1 FROM bolt_migrations WHERE version = $1`, version)
-	err = row.Scan()
+	var scanResult int
+	err = row.Scan(&scanResult)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
