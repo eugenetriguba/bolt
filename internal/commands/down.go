@@ -3,37 +3,43 @@ package commands
 import (
 	"context"
 	"flag"
-	"fmt"
-	"os"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
+	"github.com/eugenetriguba/bolt/internal/output"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
 )
 
-type ListCmd struct{}
+type DownCmd struct{}
 
-func (*ListCmd) Name() string { return "list" }
+func (*DownCmd) Name() string {
+	return "down"
+}
 
-func (*ListCmd) Synopsis() string { return "List the database migrations and their statuses." }
-func (*ListCmd) Usage() string {
-	return `list:
-	List the database migrations and their statuses.
+func (*DownCmd) Synopsis() string {
+	return "downgrade migrations against the database"
+}
+
+func (*DownCmd) Usage() string {
+	return `down:
+	Downgrade migrations against the database.
   `
 }
 
-func (m *ListCmd) SetFlags(f *flag.FlagSet) {}
+func (m *DownCmd) SetFlags(f *flag.FlagSet) {}
 
-func (m *ListCmd) Execute(
+func (m *DownCmd) Execute(
 	_ context.Context,
 	f *flag.FlagSet,
 	_ ...interface{},
 ) subcommands.ExitStatus {
+	consoleOutputter := output.ConsoleOutputter{}
+
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure
 	}
 
@@ -42,32 +48,32 @@ func (m *ListCmd) Execute(
 		storage.DBConnectionString(&cfg.Connection),
 	)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure
 	}
 	defer db.Close()
 
 	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(cfg.MigrationsDir)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure
 	}
 
-	migrationService := services.NewMigrationService(migrationDBRepo, migrationFsRepo)
-	migrations, err := migrationService.ListMigrations(services.SortOrderAsc)
+	migrationService := services.NewMigrationService(
+		migrationDBRepo,
+		migrationFsRepo,
+		consoleOutputter,
+	)
+	err = migrationService.RevertAllMigrations()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure
-	}
-
-	for _, migration := range migrations {
-		fmt.Println(migration)
 	}
 
 	return subcommands.ExitSuccess

@@ -1,22 +1,26 @@
 package services
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/bolt/internal/output"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 )
 
 type MigrationService struct {
-	dbRepo *repositories.MigrationDBRepo
-	fsRepo *repositories.MigrationFsRepo
+	dbRepo    *repositories.MigrationDBRepo
+	fsRepo    *repositories.MigrationFsRepo
+	outputter output.Outputter
 }
 
 func NewMigrationService(
 	dbRepo *repositories.MigrationDBRepo,
 	fsRepo *repositories.MigrationFsRepo,
+	outputter output.Outputter,
 ) *MigrationService {
-	return &MigrationService{dbRepo: dbRepo, fsRepo: fsRepo}
+	return &MigrationService{dbRepo: dbRepo, fsRepo: fsRepo, outputter: outputter}
 }
 
 type sortOrder int
@@ -42,6 +46,14 @@ func (ms *MigrationService) ApplyAllMigrations() error {
 }
 
 func (ms *MigrationService) ApplyMigration(migration *models.Migration) error {
+	ms.outputter.Output(
+		fmt.Sprintf(
+			"Applying migration %s_%s..",
+			migration.Version,
+			migration.Message,
+		),
+	)
+
 	scriptContents, err := ms.fsRepo.ReadUpgradeScript(migration)
 	if err != nil {
 		return err
@@ -51,6 +63,13 @@ func (ms *MigrationService) ApplyMigration(migration *models.Migration) error {
 	if err != nil {
 		return err
 	}
+	ms.outputter.Output(
+		fmt.Sprintf(
+			"Successfully applied migration %s_%s!",
+			migration.Version,
+			migration.Message,
+		),
+	)
 
 	return nil
 }
@@ -71,6 +90,13 @@ func (ms *MigrationService) RevertAllMigrations() error {
 }
 
 func (ms *MigrationService) RevertMigration(migration *models.Migration) error {
+	ms.outputter.Output(
+		fmt.Sprintf(
+			"Reverting migration %s_%s..",
+			migration.Version,
+			migration.Message,
+		),
+	)
 	scriptContents, err := ms.fsRepo.ReadDowngradeScript(migration)
 	if err != nil {
 		return err
@@ -80,12 +106,26 @@ func (ms *MigrationService) RevertMigration(migration *models.Migration) error {
 	if err != nil {
 		return err
 	}
+	ms.outputter.Output(
+		fmt.Sprintf(
+			"Successfully reverted migration %s_%s!",
+			migration.Version,
+			migration.Message,
+		),
+	)
 
 	return nil
 }
 
 func (ms *MigrationService) CreateMigration(migration *models.Migration) error {
-	return ms.fsRepo.Create(migration)
+	err := ms.fsRepo.Create(migration)
+	if err != nil {
+		return err
+	}
+	ms.outputter.Output(
+		fmt.Sprintf("Created migration %s - %s.", migration.Version, migration.Message),
+	)
+	return nil
 }
 
 func (ms *MigrationService) ListMigrations(order sortOrder) ([]*models.Migration, error) {

@@ -3,3 +3,7 @@
 
 # Editors
 /.vscode
+
+# Bolt CLI config/output
+/migrations
+/bolt.toml

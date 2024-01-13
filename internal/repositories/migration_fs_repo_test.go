@@ -88,8 +88,14 @@ func TestMigrationFsRepo_List(t *testing.T) {
 	repo, err := repositories.NewMigrationFsRepo(tempDir)
 	assert.NilError(t, err)
 
-	migration1 := models.NewMigration(time.Date(2020, 10, 12, 1, 1, 1, 1, time.UTC), "migration_1")
-	migration2 := models.NewMigration(time.Date(2022, 10, 12, 1, 1, 1, 1, time.UTC), "migration_2")
+	migration1 := models.NewMigration(
+		time.Date(2020, 10, 12, 1, 1, 1, 1, time.UTC),
+		"migration_1",
+	)
+	migration2 := models.NewMigration(
+		time.Date(2022, 10, 12, 1, 1, 1, 1, time.UTC),
+		"migration_2",
+	)
 	err = repo.Create(migration1)
 	assert.NilError(t, err)
 	repo.Create(migration2)

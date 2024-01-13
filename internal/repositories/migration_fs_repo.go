@@ -88,7 +88,9 @@ func (mr *MigrationFsRepo) List() (map[string]*models.Migration, error) {
 	return migrations, nil
 }
 
-func (mr *MigrationFsRepo) ReadUpgradeScript(migration *models.Migration) (string, error) {
+func (mr *MigrationFsRepo) ReadUpgradeScript(
+	migration *models.Migration,
+) (string, error) {
 	upgradeScriptPath := filepath.Join(
 		mr.migrationsDirPath,
 		mr.migrationDirname(migration),
@@ -97,7 +99,9 @@ func (mr *MigrationFsRepo) ReadUpgradeScript(migration *models.Migration) (strin
 	return mr.readScriptContents(upgradeScriptPath)
 }
 
-func (mr *MigrationFsRepo) ReadDowngradeScript(migration *models.Migration) (string, error) {
+func (mr *MigrationFsRepo) ReadDowngradeScript(
+	migration *models.Migration,
+) (string, error) {
 	downgradeScriptPath := filepath.Join(
 		mr.migrationsDirPath,
 		mr.migrationDirname(migration),

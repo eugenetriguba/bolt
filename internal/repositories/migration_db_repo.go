@@ -83,7 +83,10 @@ func (mr *MigrationDBRepo) IsApplied(version string) (applied bool, err error) {
 // and adding the applied migration version into the migrations table. When
 // successfully applied, the `migration` model's `Applied` field will be set
 // to true.
-func (mr *MigrationDBRepo) Apply(upgradeScript string, migration *models.Migration) error {
+func (mr *MigrationDBRepo) Apply(
+	upgradeScript string,
+	migration *models.Migration,
+) error {
 	tx, err := mr.db.Begin()
 	if err != nil {
 		return err
@@ -114,7 +117,10 @@ func (mr *MigrationDBRepo) Apply(upgradeScript string, migration *models.Migrati
 // Revert reverts a migration by executing the corresponding downgrade script
 // and deleting the migration version from the migrations table. When successfully
 // reverted, the `migration` model's `Applied` field will be set to false.
-func (mr *MigrationDBRepo) Revert(downgradeScript string, migration *models.Migration) error {
+func (mr *MigrationDBRepo) Revert(
+	downgradeScript string,
+	migration *models.Migration,
+) error {
 	tx, err := mr.db.Begin()
 	if err != nil {
 		return err

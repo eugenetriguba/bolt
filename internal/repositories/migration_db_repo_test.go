@@ -159,7 +159,10 @@ func TestMigrationDBRepo_Revert(t *testing.T) {
 	assert.NilError(t, err)
 
 	migration := models.NewMigration(time.Now(), "test")
-	_, err = db.Exec(`INSERT INTO bolt_migrations(version) VALUES ($1);`, migration.Version)
+	_, err = db.Exec(
+		`INSERT INTO bolt_migrations(version) VALUES ($1);`,
+		migration.Version,
+	)
 	assert.NilError(t, err)
 	migration.Applied = true
 
