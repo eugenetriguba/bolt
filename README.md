@@ -3,6 +3,17 @@
   <h1>Bolt</h1>
 </div>
 
+<p>
+    <a href="https://godoc.org/github.com/eugenetriguba/bolt">
+        <img src="https://godoc.org/github.com/eugenetriguba/bolt?status.svg" alt="GoDoc">
+    </a>
+    <a href="https://goreportcard.com/report/github.com/eugenetriguba/bolt">
+        <img src="https://goreportcard.com/badge/github.com/eugenetriguba/bolt" alt="Go Report Card Badge">
+    </a>
+    <img alt="Version Badge" src="https://img.shields.io/badge/version-0.2.0-blue" style="max-width:100%;">
+</p>
+
+
 Bolt is a command-line tool designed to simplify and streamline your database migration process.
 
 🌟 Key Features:
