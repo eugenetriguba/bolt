@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/bolt/internal/sqlparse"
 )
 
 type MigrationDBRepo struct {
@@ -87,27 +88,48 @@ func (mr *MigrationDBRepo) Apply(
 	upgradeScript string,
 	migration *models.Migration,
 ) error {
-	tx, err := mr.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	_, err = tx.Exec(upgradeScript)
+	sqlParser := sqlparse.NewSqlParser(strings.NewReader(upgradeScript))
+	execOptions, err := sqlParser.Parse()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(
-		`INSERT INTO bolt_migrations(version) VALUES ($1);`,
-		migration.Version,
-	)
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
+	if execOptions.UseTransaction {
+		tx, err := mr.db.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		_, err = tx.Exec(upgradeScript)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(
+			`INSERT INTO bolt_migrations(version) VALUES ($1);`,
+			migration.Version,
+		)
+		if err != nil {
+			return err
+		}
+		err = tx.Commit()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = mr.db.Exec(upgradeScript)
+		if err != nil {
+			return err
+		}
+
+		_, err = mr.db.Exec(
+			`INSERT INTO bolt_migrations(version) VALUES ($1);`,
+			migration.Version,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	migration.Applied = true
@@ -121,28 +143,49 @@ func (mr *MigrationDBRepo) Revert(
 	downgradeScript string,
 	migration *models.Migration,
 ) error {
-	tx, err := mr.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	_, err = tx.Exec(downgradeScript)
+	sqlParser := sqlparse.NewSqlParser(strings.NewReader(downgradeScript))
+	execOptions, err := sqlParser.Parse()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(
-		`DELETE FROM bolt_migrations WHERE version = $1;`,
-		migration.Version,
-	)
-	if err != nil {
-		return err
-	}
+	if execOptions.UseTransaction {
+		tx, err := mr.db.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
 
-	err = tx.Commit()
-	if err != nil {
-		return err
+		_, err = tx.Exec(downgradeScript)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(
+			`DELETE FROM bolt_migrations WHERE version = $1;`,
+			migration.Version,
+		)
+		if err != nil {
+			return err
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = mr.db.Exec(downgradeScript)
+		if err != nil {
+			return err
+		}
+
+		_, err = mr.db.Exec(
+			`DELETE FROM bolt_migrations WHERE version = $1;`,
+			migration.Version,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	migration.Applied = false

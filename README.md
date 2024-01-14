@@ -28,6 +28,8 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
   - [Downgrading Your Migration](#downgrading-your-migration)
   - [Verifying Migration Reversion](#verifying-migration-reversion)
   - [Next Steps](#next-steps)
+- [How-to](#how-to)
+  - [How to execute a migration script without a transaction](#how-to-execute-a-migration-script-without-a-transaction)
 - [Reference](#reference)
   - [Database Compatibility](#database-compatibility)
   - [Configuration](#configuration)
@@ -38,6 +40,7 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
     - [`bolt up`](#bolt-up)
     - [`bolt down`](#bolt-down)
     - [`bolt status`](#bolt-status)
+  - [Script Execution Options](#script-execution-options)
 - [Explanation](#explanation)
   - [How Are Migration Scripts Executed?](#how-are-migration-scripts-executed)
   - [How Does Bolt Know What Migrations Have Been Applied?](#how-does-bolt-know-what-migrations-have-been-applied)
@@ -214,6 +217,16 @@ bolt_tutorial_db=# \dt
 
 Congrats! You've learned the core features of Bolt. If you want learn more, see the [Reference](#reference) or [Explanation](#explanation) section.
 
+## How-to
+
+### How to execute a migration script without a transaction
+
+In your `upgrade.sql` or `downgrade.sql`, add the following line as the first line of your script:
+
+```sql
+-- bolt: no-transaction
+```
+
 ## Reference
 
 ### Database Compatibility
@@ -314,6 +327,14 @@ $ bolt help status
 status:
 	List the database migrations and their statuses
 ```
+
+### Script Execution Options
+
+Bolt provides a way for you to customize how your migration scripts are executed if you need something different than the default behavior.
+
+You can do this by adding a comment to the top of your migration script. The comment must be in the following format: `-- bolt: <option>`. The following options are available:
+
+- `no-transaction`: Execute the migration script without a transaction. By default, every migration script will be attempted to be executed within a transaction, however, some SQL commands cannot be executed within a transaction so you'll need to opt out of that behavior in those cases.
 
 ## Explanation
 
