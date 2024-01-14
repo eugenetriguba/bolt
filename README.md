@@ -63,7 +63,7 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
 To install Bolt, run the following command:
 
 ```bash
-$ go install github.com/eugenetriguba/bolt@latest
+$ go install github.com/eugenetriguba/bolt/cmd/bolt@latest
 ```
 
 This will install Bolt to your `$GOBIN` directory. Make sure that `$GOBIN` is in your `$PATH`.
