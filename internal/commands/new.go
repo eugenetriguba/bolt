@@ -26,7 +26,7 @@ func (*NewCmd) Synopsis() string {
 }
 
 func (*NewCmd) Usage() string {
-	return `create [-message|-m]:
+	return `new [-message|-m]:
 	Create a new database migration
   `
 }

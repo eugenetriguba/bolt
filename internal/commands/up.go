@@ -25,7 +25,7 @@ func (*UpCmd) Synopsis() string {
 }
 
 func (*UpCmd) Usage() string {
-	return `up:
+	return `up [-version|-v]:
 	Apply migrations against the database
   `
 }
