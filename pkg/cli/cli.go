@@ -13,6 +13,7 @@ func Run() int {
 	subcommands.Register(subcommands.HelpCommand(), "")
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
+	subcommands.Register(&commands.VersionCmd{}, "")
 	subcommands.Register(&commands.NewCmd{}, "")
 	subcommands.Register(&commands.UpCmd{}, "")
 	subcommands.Register(&commands.DownCmd{}, "")
