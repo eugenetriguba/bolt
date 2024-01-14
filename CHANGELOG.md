@@ -9,31 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for environment variables to configure bolt. You may now use the TOML configuration
-  file and/or environment variables to specify the configuration options. The environment variables
-  will take precedence over any values set in the TOML configuration file.
+- Support for environment variables to configure bolt. You may now use the TOML configuration file and/or environment variables to specify the configuration options. The environment variables will take precedence over any values set in the TOML configuration file.
 
   New environment variables
-  - `BOLT_MIGRATIONS_DIR`
-  - `BOLT_CONNECTION_HOST`
-  - `BOLT_CONNECTION_PORT`
-  - `BOLT_CONNECTION_USER`
-  - `BOLT_CONNECTION_PASSWORD`
-  - `BOLT_CONNECTION_DBNAME`
-  - `BOLT_CONNECTION_DRIVER`
+  - `BOLT_MIGRATIONS_DIR_PATH`
+  - `BOLT_DB_CONN_HOST`
+  - `BOLT_DB_CONN_PORT`
+  - `BOLT_DB_CONN_USER`
+  - `BOLT_DB_CONN_PASSWORD`
+  - `BOLT_DB_CONN_DBNAME`
+  - `BOLT_DB_CONN_DRIVER`
 
 - Support for Windows when looking up the user's bolt configuration file.
   Previously, as the filesystem was traversed, it would look for "/" as the
   root directory.
 
-### Changed
+- `bolt down` command to enable rollback of all migrations or optionally to a specific version.
 
-- The `migrate` command will now exit with a status code of 1
-  if it encounters an error while running a migration. Previously,
-  it was silently failing.
+- `bolt up` now supports a `-v` or `-version` flag which allows upgrading to a specific version.
+
+- `bolt version` command to display the current version of bolt.
+  
+- Support for executing migration scripts without a transaction. Use `-- bolt: no-transaction` as the first line of your migration script to disable transactions for that migration.
+
+### Changed
 
 - `bolt_migrations` `version` column is now 14 characters long instead of 32.
 
+- `bolt migrate` has been renamed to `bolt up`.
+  
+- `bolt list` has been renamed to `bolt status`.
+  
+- `bolt create` has been renamed to `bolt new`.
+
+- The `up` command will now exit with a status code of 1
+  if it encounters an error while running a migration. Previously,
+  it was silently failing.
+
+- `bolt status` output has been updated to be a tabular format.
+
+- `[connection]` in `bolt.toml` should now be `[bolt.db.connection]`.
+
+- `migrations_dir` in `bolt.toml` should now be in a `[bolt.migrations]` section and should now be called `directory_path`.
+  
 ## [0.1.0] - 2023-12-30
 
 ### Added
