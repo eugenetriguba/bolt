@@ -26,7 +26,7 @@ func (*DownCmd) Synopsis() string {
 
 func (*DownCmd) Usage() string {
 	return `down [-version|-v]:
-	Downgrade migrations against the database.
+	Downgrade migrations against the database
   `
 }
 
