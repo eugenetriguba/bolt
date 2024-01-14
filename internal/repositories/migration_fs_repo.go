@@ -62,6 +62,30 @@ func (mr *MigrationFsRepo) Create(migration *models.Migration) error {
 	return nil
 }
 
+func (mr *MigrationFsRepo) Exists(version string) (bool, error) {
+	migrations, err := mr.List()
+	if err != nil {
+		return false, err
+	}
+
+	_, ok := migrations[version]
+	return ok, nil
+}
+
+func (mr *MigrationFsRepo) Get(version string) (*models.Migration, error) {
+	migrations, err := mr.List()
+	if err != nil {
+		return nil, err
+	}
+
+	migration, ok := migrations[version]
+	if !ok {
+		return nil, fmt.Errorf("migration %s does not exist", version)
+	}
+
+	return migration, nil
+}
+
 func (mr *MigrationFsRepo) List() (map[string]*models.Migration, error) {
 	entries, err := os.ReadDir(mr.migrationsDirPath)
 	if err != nil {

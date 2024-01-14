@@ -35,7 +35,7 @@ func (m *StatusCmd) Execute(
 	f *flag.FlagSet,
 	_ ...interface{},
 ) subcommands.ExitStatus {
-	consoleOutputter := output.ConsoleOutputter{}
+	consoleOutputter := output.NewConsoleOutputter()
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {

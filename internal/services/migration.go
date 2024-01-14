@@ -45,6 +45,45 @@ func (ms *MigrationService) ApplyAllMigrations() error {
 	return nil
 }
 
+func (ms *MigrationService) ApplyUpToVersion(version string) error {
+	migrations, err := ms.ListMigrations(SortOrderAsc)
+	if err != nil {
+		return err
+	}
+
+	var targetMigration *models.Migration
+	for _, migration := range migrations {
+		if migration.Version == version {
+			targetMigration = migration
+			break
+		}
+	}
+	if targetMigration == nil {
+		return fmt.Errorf("migration with version %s does not exist", version)
+	}
+	if targetMigration.Applied {
+		return fmt.Errorf(
+			"migration with version %s is already applied, nothing to apply",
+			version,
+		)
+	}
+
+	for _, migration := range migrations {
+		if !migration.Applied {
+			err := ms.ApplyMigration(migration)
+			if err != nil {
+				return err
+			}
+		}
+
+		if migration.Version == version {
+			break
+		}
+	}
+
+	return nil
+}
+
 func (ms *MigrationService) ApplyMigration(migration *models.Migration) error {
 	ms.outputter.Output(
 		fmt.Sprintf(
@@ -83,6 +122,45 @@ func (ms *MigrationService) RevertAllMigrations() error {
 	for _, migration := range migrations {
 		if migration.Applied {
 			ms.RevertMigration(migration)
+		}
+	}
+
+	return nil
+}
+
+func (ms *MigrationService) RevertDownToVersion(version string) error {
+	migrations, err := ms.ListMigrations(SortOrderDesc)
+	if err != nil {
+		return err
+	}
+
+	var targetMigration *models.Migration
+	for _, migration := range migrations {
+		if migration.Version == version {
+			targetMigration = migration
+			break
+		}
+	}
+	if targetMigration == nil {
+		return fmt.Errorf("migration with version %s does not exist", version)
+	}
+	if !targetMigration.Applied {
+		return fmt.Errorf(
+			"migration with version %s isn't applied, nothing to revert",
+			version,
+		)
+	}
+
+	for _, migration := range migrations {
+		if migration.Applied {
+			err := ms.RevertMigration(migration)
+			if err != nil {
+				return err
+			}
+		}
+
+		if migration.Version == version {
+			break
 		}
 	}
 

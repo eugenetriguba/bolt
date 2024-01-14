@@ -12,7 +12,9 @@ import (
 	"github.com/google/subcommands"
 )
 
-type UpCmd struct{}
+type UpCmd struct {
+	version string
+}
 
 func (*UpCmd) Name() string {
 	return "up"
@@ -28,14 +30,23 @@ func (*UpCmd) Usage() string {
   `
 }
 
-func (m *UpCmd) SetFlags(f *flag.FlagSet) {}
+func (cmd *UpCmd) SetFlags(f *flag.FlagSet) {
+	f.StringVar(
+		&cmd.version,
+		"version",
+		"",
+		"The version to upgrade up and including to.",
+	)
+	f.StringVar(&cmd.version, "v", cmd.version, "alias for -version")
+}
 
-func (m *UpCmd) Execute(
+func (cmd *UpCmd) Execute(
 	_ context.Context,
 	f *flag.FlagSet,
 	_ ...interface{},
 ) subcommands.ExitStatus {
-	consoleOutputter := output.ConsoleOutputter{}
+	consoleOutputter := output.NewConsoleOutputter()
+
 	cfg, err := configloader.NewConfig()
 	if err != nil {
 		consoleOutputter.Error(err.Error())
@@ -69,10 +80,19 @@ func (m *UpCmd) Execute(
 		migrationFsRepo,
 		consoleOutputter,
 	)
-	err = migrationService.ApplyAllMigrations()
-	if err != nil {
-		consoleOutputter.Error(err.Error())
-		return subcommands.ExitFailure
+
+	if cmd.version == "" {
+		err = migrationService.ApplyAllMigrations()
+		if err != nil {
+			consoleOutputter.Error(err.Error())
+			return subcommands.ExitFailure
+		}
+	} else {
+		err = migrationService.ApplyUpToVersion(cmd.version)
+		if err != nil {
+			consoleOutputter.Error(err.Error())
+			return subcommands.ExitFailure
+		}
 	}
 
 	return subcommands.ExitSuccess

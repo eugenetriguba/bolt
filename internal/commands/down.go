@@ -12,7 +12,9 @@ import (
 	"github.com/google/subcommands"
 )
 
-type DownCmd struct{}
+type DownCmd struct {
+	version string
+}
 
 func (*DownCmd) Name() string {
 	return "down"
@@ -28,14 +30,22 @@ func (*DownCmd) Usage() string {
   `
 }
 
-func (m *DownCmd) SetFlags(f *flag.FlagSet) {}
+func (cmd *DownCmd) SetFlags(f *flag.FlagSet) {
+	f.StringVar(
+		&cmd.version,
+		"version",
+		"",
+		"The version to downgrade down and including to.",
+	)
+	f.StringVar(&cmd.version, "v", cmd.version, "alias for -version")
+}
 
-func (m *DownCmd) Execute(
+func (cmd *DownCmd) Execute(
 	_ context.Context,
 	f *flag.FlagSet,
 	_ ...interface{},
 ) subcommands.ExitStatus {
-	consoleOutputter := output.ConsoleOutputter{}
+	consoleOutputter := output.NewConsoleOutputter()
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
@@ -70,10 +80,19 @@ func (m *DownCmd) Execute(
 		migrationFsRepo,
 		consoleOutputter,
 	)
-	err = migrationService.RevertAllMigrations()
-	if err != nil {
-		consoleOutputter.Error(err.Error())
-		return subcommands.ExitFailure
+
+	if cmd.version == "" {
+		err = migrationService.RevertAllMigrations()
+		if err != nil {
+			consoleOutputter.Error(err.Error())
+			return subcommands.ExitFailure
+		}
+	} else {
+		err = migrationService.RevertDownToVersion(cmd.version)
+		if err != nil {
+			consoleOutputter.Error(err.Error())
+			return subcommands.ExitFailure
+		}
 	}
 
 	return subcommands.ExitSuccess
