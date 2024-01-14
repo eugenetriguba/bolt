@@ -10,7 +10,7 @@
     <a href="https://goreportcard.com/report/github.com/eugenetriguba/bolt">
         <img src="https://goreportcard.com/badge/github.com/eugenetriguba/bolt" alt="Go Report Card Badge">
     </a>
-    <img alt="Version Badge" src="https://img.shields.io/badge/version-0.2.0-blue" style="max-width:100%;">
+    <img alt="Version Badge" src="https://img.shields.io/badge/version-0.2.1-blue" style="max-width:100%;">
 </p>
 
 
