@@ -8,7 +8,7 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
 🌟 Key Features:
 - **SQL-Powered Flexibility**: 🧩 - Write your migration scripts in plain SQL. This gives you the full power and familiarity of SQL, ensuring that you're not limited by the constraints of a specific DSL (Domain Specific Language).
 
-- **Bidirectional Migrations**: 🔀 - With support for both 'up' (migrating) and 'down' (downgrading) migrations, Bolt provides complete control over your database versions. This feature is essential for maintaining database integrity and for executing seamless rollbacks whenever necessary.
+- **Bidirectional Migrations**: 🔀 - With support for both 'up' (migrating) and 'down' (downgrading) migrations, Bolt provides complete control over your database versions.
 
 - **Time-Travel with Ease**: ⏳ - Migrate or downgrade to any specific point in time. Bolt allows you to specify a specific migration version to migrate or downgrade to, allowing you to easily time-travel to any point in your database's history.
 
