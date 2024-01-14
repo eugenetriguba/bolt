@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 )
 
@@ -25,20 +26,20 @@ type MigrationFsRepo struct {
 	migrationsDirPath string
 }
 
-func NewMigrationFsRepo(migrationsDirPath string) (*MigrationFsRepo, error) {
-	fileInfo, err := os.Stat(migrationsDirPath)
+func NewMigrationFsRepo(migrationsConfig *configloader.MigrationsConfig) (*MigrationFsRepo, error) {
+	fileInfo, err := os.Stat(migrationsConfig.DirectoryPath)
 	if errors.Is(err, os.ErrNotExist) {
-		err = os.MkdirAll(migrationsDirPath, 0755)
+		err = os.MkdirAll(migrationsConfig.DirectoryPath, 0755)
 		if err != nil {
 			return nil, err
 		}
 	} else if err != nil {
 		return nil, err
 	} else if err == nil && !fileInfo.IsDir() {
-		return nil, &ErrIsNotDir{path: migrationsDirPath}
+		return nil, &ErrIsNotDir{path: migrationsConfig.DirectoryPath}
 	}
 
-	return &MigrationFsRepo{migrationsDirPath: migrationsDirPath}, nil
+	return &MigrationFsRepo{migrationsDirPath: migrationsConfig.DirectoryPath}, nil
 }
 
 func (mr *MigrationFsRepo) Create(migration *models.Migration) error {

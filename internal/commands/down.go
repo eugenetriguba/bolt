@@ -69,7 +69,7 @@ func (cmd *DownCmd) Execute(
 		return subcommands.ExitFailure
 	}
 
-	migrationFsRepo, err := repositories.NewMigrationFsRepo(cfg.MigrationsDir)
+	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
 		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure

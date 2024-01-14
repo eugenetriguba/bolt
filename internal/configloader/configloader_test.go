@@ -10,18 +10,18 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-func TestNewConfigMigrationsDirDefault(t *testing.T) {
+func TestNewConfigMigrationsDirPathDefault(t *testing.T) {
 	bolttest.ChangeCwd(t, os.TempDir())
 
 	cfg, err := configloader.NewConfig()
 	assert.NilError(t, err)
 
-	assert.Equal(t, cfg.MigrationsDir, "migrations")
+	assert.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 	expectedCfg := configloader.Config{
-		MigrationsDir: "myfancymigrations",
+		Migrations: configloader.MigrationsConfig{DirectoryPath: "myfancymigrations"},
 		Connection: configloader.ConnectionConfig{
 			Host:     "testhost",
 			Port:     1234,
@@ -40,7 +40,7 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 
 func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	fileCfg := configloader.Config{
-		MigrationsDir: "cfgmigrations",
+		Migrations: configloader.MigrationsConfig{DirectoryPath: "cfgmigrations"},
 		Connection: configloader.ConnectionConfig{
 			Host:     "testhost",
 			Port:     1234,
@@ -53,7 +53,7 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	bolttest.CreateConfigFile(t, &fileCfg, "bolt.toml")
 
 	envCfg := configloader.Config{
-		MigrationsDir: "envmigrations",
+		Migrations: configloader.MigrationsConfig{DirectoryPath: "envmigrations"},
 		Connection: configloader.ConnectionConfig{
 			Host:     "envtesthost",
 			Port:     4321,
@@ -63,13 +63,13 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 			Driver:   "postgres",
 		},
 	}
-	t.Setenv("BOLT_MIGRATIONS_DIR", envCfg.MigrationsDir)
-	t.Setenv("BOLT_CONNECTION_HOST", envCfg.Connection.Host)
-	t.Setenv("BOLT_CONNECTION_PORT", fmt.Sprintf("%d", envCfg.Connection.Port))
-	t.Setenv("BOLT_CONNECTION_USER", envCfg.Connection.User)
-	t.Setenv("BOLT_CONNECTION_PASSWORD", envCfg.Connection.Password)
-	t.Setenv("BOLT_CONNECTION_DBNAME", envCfg.Connection.DBName)
-	t.Setenv("BOLT_CONNECTION_DRIVER", envCfg.Connection.Driver)
+	t.Setenv("BOLT_MIGRATIONS_DIR_PATH", envCfg.Migrations.DirectoryPath)
+	t.Setenv("BOLT_DB_CONN_HOST", envCfg.Connection.Host)
+	t.Setenv("BOLT_DB_CONN_PORT", fmt.Sprintf("%d", envCfg.Connection.Port))
+	t.Setenv("BOLT_DB_CONN_USER", envCfg.Connection.User)
+	t.Setenv("BOLT_DB_CONN_PASSWORD", envCfg.Connection.Password)
+	t.Setenv("BOLT_DB_CONN_DBNAME", envCfg.Connection.DBName)
+	t.Setenv("BOLT_DB_CONN_DRIVER", envCfg.Connection.Driver)
 
 	cfg, err := configloader.NewConfig()
 	assert.NilError(t, err)

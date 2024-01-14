@@ -13,7 +13,7 @@ import (
 
 func TestNewConfigUnixSearchesToRootFilePath(t *testing.T) {
 	expectedCfg := configloader.Config{
-		MigrationsDir: "differentmigrationsdir",
+		Migrations: configloader.MigrationsConfig{DirectoryPath: "differentmigrationsdir"},
 	}
 	bolttest.CreateConfigFile(t, &expectedCfg, "/bolt.toml")
 

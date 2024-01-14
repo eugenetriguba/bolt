@@ -132,7 +132,7 @@ $ touch bolt.toml
 2. Add the following contents to the file:
 
 ```toml
-[connection]
+[bolt.db.connection]
 host = "localhost"
 port = 5432
 user = "bolt_user"
@@ -230,16 +230,17 @@ Bolt attempts to find a `bolt.toml` file in your current working directory
 or in any parent directory.
 
 ```toml
+[bolt.migrations]
 # The directory where your migration scripts are located.
 # Defaults to "migrations". This directory is relative to
 # the current working directory. You may also use an absolute
 # path.
-migrations_dir = "migrations"
+directory_path = "migrations"
 
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
 # required.
-[connection]
+[bolt.db.connection]
 # The host to use to connect to your database.
 host = 
 # The port to use to connect to your database.
@@ -260,13 +261,13 @@ driver =
 
 All configuration file settings have corresponding environment variables.
 
-- `BOLT_MIGRATIONS_DIR`
-- `BOLT_CONNECTION_HOST`
-- `BOLT_CONNECTION_PORT`
-- `BOLT_CONNECTION_USER`
-- `BOLT_CONNECTION_PASSWORD`
-- `BOLT_CONNECTION_DBNAME`
-- `BOLT_CONNECTION_DRIVER`
+- `BOLT_MIGRATIONS_DIR_PATH`
+- `BOLT_DB_CONN_HOST`
+- `BOLT_DB_CONN_PORT`
+- `BOLT_DB_CONN_USER`
+- `BOLT_DB_CONN_PASSWORD`
+- `BOLT_DB_CONN_DBNAME`
+- `BOLT_DB_CONN_DRIVER`
 
 ### Commands
 
@@ -299,7 +300,7 @@ up [-version|-v]:
 ```bash
 $ bolt help up
 down [-version|-v]:
-	Downgrade migrations against the database.
+	Downgrade migrations against the database
     -v string
     	alias for -version
   -version string

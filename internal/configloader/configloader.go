@@ -27,23 +27,24 @@ var errConfigFileNotFound = errors.New(
 // This can come from the TOML file or environment variables,
 // with environment variables taking precedence.
 type Config struct {
-	// Relative file path from the bolt configuration file.
-	// This is optional and will default to "migrations" if
-	// not specified.
-	MigrationsDir string `toml:"migrations_dir" envconfig:"BOLT_MIGRATIONS_DIR"`
+	Migrations MigrationsConfig `toml:"bolt.migrations"`
 
 	// Information related to how to connect to the database
 	// that is desired to run migrations against.
-	Connection ConnectionConfig `toml:"connection"`
+	Connection ConnectionConfig `toml:"bolt.db.connection"`
+}
+
+type MigrationsConfig struct {
+	DirectoryPath string `toml:"directory_path" envconfig:"BOLT_MIGRATIONS_DIR_PATH"`
 }
 
 type ConnectionConfig struct {
-	Host     string `toml:"host"     envconfig:"BOLT_CONNECTION_HOST"`
-	Port     int    `toml:"port"     envconfig:"BOLT_CONNECTION_PORT"`
-	User     string `toml:"user"     envconfig:"BOLT_CONNECTION_USER"`
-	Password string `toml:"password" envconfig:"BOLT_CONNECTION_PASSWORD"`
-	DBName   string `toml:"dbname"   envconfig:"BOLT_CONNECTION_DBNAME"`
-	Driver   string `toml:"driver"   envconfig:"BOLT_CONNECTION_DRIVER"`
+	Host     string `toml:"host"     envconfig:"BOLT_DB_CONN_HOST"`
+	Port     int    `toml:"port"     envconfig:"BOLT_DB_CONN_PORT"`
+	User     string `toml:"user"     envconfig:"BOLT_DB_CONN_USER"`
+	Password string `toml:"password" envconfig:"BOLT_DB_CONN_PASSWORD"`
+	DBName   string `toml:"dbname"   envconfig:"BOLT_DB_CONN_DBNAME"`
+	Driver   string `toml:"driver"   envconfig:"BOLT_DB_CONN_DRIVER"`
 }
 
 func NewConfig() (*Config, error) {
@@ -52,7 +53,7 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	cfg := Config{MigrationsDir: "migrations"}
+	cfg := Config{Migrations: MigrationsConfig{DirectoryPath: "migrations"}}
 	if !errors.Is(err, errConfigFileNotFound) {
 		_, err = toml.DecodeFile(filePath, &cfg)
 		if err != nil {

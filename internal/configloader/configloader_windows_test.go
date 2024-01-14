@@ -14,7 +14,7 @@ import (
 
 func TestNewConfigWindowsSearchesToRootFilePath(t *testing.T) {
 	expectedCfg := configloader.Config{
-		MigrationsDir: "differentmigrationsdir",
+		Migrations: configloader.MigrationsConfig{DirectoryPath: "differentmigrationsdir"},
 	}
 	configPath := filepath.Join(os.Getenv("SystemDrive"), "bolt.toml")
 	bolttest.CreateConfigFile(t, &expectedCfg, configPath)

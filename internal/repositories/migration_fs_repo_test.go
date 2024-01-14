@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"gotest.tools/v3/assert"
@@ -20,8 +21,9 @@ func assertFileExists(t *testing.T, path string) {
 func TestNewMigrationFsRepoCreatesDirIfNotExists(t *testing.T) {
 	tempDir := t.TempDir()
 	migrationsDir := filepath.Join(tempDir, "migrations")
+	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
 
-	_, err := repositories.NewMigrationFsRepo(migrationsDir)
+	_, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
 
 	assertFileExists(t, migrationsDir)
@@ -30,16 +32,18 @@ func TestNewMigrationFsRepoCreatesDirIfNotExists(t *testing.T) {
 func TestNewMigrationFsRepoMigrationDirIsFile(t *testing.T) {
 	tempDir := t.TempDir()
 	migrationsDir := filepath.Join(tempDir, "migrations")
+	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
 	_, err := os.Create(migrationsDir)
 	assert.NilError(t, err)
 
-	_, err = repositories.NewMigrationFsRepo(migrationsDir)
+	_, err = repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.ErrorContains(t, err, "is not a directory")
 }
 
 func TestMigrationFsRepoCreate(t *testing.T) {
 	tempDir := t.TempDir()
-	repo, err := repositories.NewMigrationFsRepo(tempDir)
+	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
+	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
 	migration := models.NewMigration(time.Now(), "add users table")
 
@@ -54,7 +58,8 @@ func TestMigrationFsRepoCreate(t *testing.T) {
 
 func TestMigrationFsRepoReadUpgradeAndDowngradeScript(t *testing.T) {
 	tempDir := t.TempDir()
-	repo, err := repositories.NewMigrationFsRepo(tempDir)
+	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
+	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
 
 	migration := models.NewMigration(time.Now(), "add users table")
@@ -85,7 +90,8 @@ func TestMigrationFsRepoReadUpgradeAndDowngradeScript(t *testing.T) {
 
 func TestMigrationFsRepo_List(t *testing.T) {
 	tempDir := t.TempDir()
-	repo, err := repositories.NewMigrationFsRepo(tempDir)
+	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
+	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
 
 	migration1 := models.NewMigration(
