@@ -326,8 +326,8 @@ Bolt keeps track of which migrations have been applied to your database by creat
 
 ### How Are Migrations Applied?
 
-When you run `bolt up`, Bolt will look at your local migration scripts and compares the version part of the migration directory names to the versions that have been inserted into the `bolt_migrations` table. Any versions that aren't in the table will be applied in order, starting with the oldest migration.
+When you run `bolt up`, Bolt will look at your local migration scripts and compares the version part of the migration directory names to the versions that have been inserted into the `bolt_migrations` table. Any versions that aren't in the table will be applied in order, starting with the oldest migration. Applying a migration entails executing the `upgrade.sql` script in a transaction and inserting in the migration's version into the `bolt_migrations` table.
 
 ### How Are Migrations Reverted?
 
-When you run `bolt down`, Bolt will look at the `bolt_migrations` table and compare the versions to the versions of your local migration scripts. Any versions that are in the table but not in your local migration scripts will be reverted in order, starting with the newest migration.
+When you run `bolt down`, Bolt will look at the `bolt_migrations` table and compare the versions to the versions of your local migration scripts. Any versions that are in the table but not in your local migration scripts will be reverted in order, starting with the newest migration. Reverting a migration entails executing the `downgrade.sql` script in a transaction and removing the migration's version from the `bolt_migrations` table.
