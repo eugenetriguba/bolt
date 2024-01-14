@@ -146,7 +146,7 @@ $ touch bolt.toml
 2. Add the following contents to the file:
 
 ```toml
-[bolt.db.connection]
+[connection]
 host = "localhost"
 port = 5432
 user = "bolt_user"
