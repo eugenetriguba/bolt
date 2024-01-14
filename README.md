@@ -254,7 +254,7 @@ Bolt attempts to find a `bolt.toml` file in your current working directory
 or in any parent directory.
 
 ```toml
-[bolt.migrations]
+[migrations]
 # The directory where your migration scripts are located.
 # Defaults to "migrations". This directory is relative to
 # the current working directory. You may also use an absolute
@@ -264,7 +264,7 @@ directory_path = "migrations"
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
 # required.
-[bolt.db.connection]
+[connection]
 # The host to use to connect to your database.
 host = 
 # The port to use to connect to your database.

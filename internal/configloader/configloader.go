@@ -27,11 +27,11 @@ var errConfigFileNotFound = errors.New(
 // This can come from the TOML file or environment variables,
 // with environment variables taking precedence.
 type Config struct {
-	Migrations MigrationsConfig `toml:"bolt.migrations"`
+	Migrations MigrationsConfig `toml:"migrations"`
 
 	// Information related to how to connect to the database
 	// that is desired to run migrations against.
-	Connection ConnectionConfig `toml:"bolt.db.connection"`
+	Connection ConnectionConfig `toml:"connection"`
 }
 
 type MigrationsConfig struct {
