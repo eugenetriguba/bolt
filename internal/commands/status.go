@@ -79,7 +79,7 @@ func (m *StatusCmd) Execute(
 	if len(migrations) == 0 {
 		consoleOutputter.Output(
 			"No migrations have been created.\n" +
-				"Run 'bolt create' to create your first migration.",
+				"Run 'bolt new' to create your first migration.",
 		)
 		return subcommands.ExitSuccess
 	}
