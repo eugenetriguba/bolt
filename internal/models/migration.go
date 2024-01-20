@@ -11,30 +11,22 @@ type Migration struct {
 	Applied bool
 }
 
-func NewMigration(timestamp time.Time, message string) *Migration {
-	version := fmt.Sprintf(
-		"%d%02d%02d%02d%02d%02d",
-		timestamp.Year(), timestamp.Month(), timestamp.Day(),
-		timestamp.Hour(), timestamp.Minute(), timestamp.Second(),
-	)
-	return &Migration{Version: version, Message: message, Applied: false}
+func NewTimestampMigration(version time.Time, message string) *Migration {
+	return &Migration{
+		Version: fmt.Sprintf(
+			"%d%02d%02d%02d%02d%02d",
+			version.Year(), version.Month(), version.Day(),
+			version.Hour(), version.Minute(), version.Second(),
+		),
+		Message: message,
+		Applied: false,
+	}
 }
 
-func (m *Migration) String() string {
-	checkmark := " "
-	if m.Applied {
-		checkmark = "x"
+func NewSequentialMigration(version uint64, message string) *Migration {
+	return &Migration{
+		Version: fmt.Sprintf("%03d", version),
+		Message: message,
+		Applied: false,
 	}
-
-	message := m.Message
-	if len(message) > 0 {
-		message = fmt.Sprintf("- %s ", message)
-	}
-
-	return fmt.Sprintf(
-		"%s %s- [%s]",
-		m.Version,
-		message,
-		checkmark,
-	)
 }

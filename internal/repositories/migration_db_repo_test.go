@@ -131,7 +131,7 @@ func TestMigrationDBRepo_Apply(t *testing.T) {
 	repo, err := repositories.NewMigrationDBRepo(db)
 	assert.NilError(t, err)
 
-	migration := models.NewMigration(time.Now(), "test")
+	migration := models.NewTimestampMigration(time.Now(), "test")
 	err = repo.Apply(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`, migration)
 	assert.NilError(t, err)
 	assert.Equal(t, migration.Applied, true)
@@ -158,7 +158,7 @@ func TestMigrationDBRepo_Revert(t *testing.T) {
 	_, err = db.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
 	assert.NilError(t, err)
 
-	migration := models.NewMigration(time.Now(), "test")
+	migration := models.NewTimestampMigration(time.Now(), "test")
 	_, err = db.Exec(
 		`INSERT INTO bolt_migrations(version) VALUES ($1);`,
 		migration.Version,
@@ -194,7 +194,7 @@ func TestMigrationDBRepo_ApplyAndRevertWithoutTransaction(t *testing.T) {
 	_, err = db.Exec("CREATE TABLE tmp(id INT PRIMARY KEY, id2 INT, id3 INT)")
 	assert.NilError(t, err)
 
-	migration := models.NewMigration(time.Now(), "test")
+	migration := models.NewTimestampMigration(time.Now(), "test")
 	// CREATE INDEX CONCURRENTLY cannot run inside a transaction.
 	err = repo.Apply(
 		`-- bolt: no-transaction\CREATE INDEX CONCURRENTLY i1 ON tmp(id2);`,
@@ -215,7 +215,7 @@ func TestMigrationDBRepo_ApplyMalformedSql(t *testing.T) {
 	db := bolttest.NewTestDB(t, "postgres")
 	repo, err := repositories.NewMigrationDBRepo(db)
 	assert.NilError(t, err)
-	migration := models.NewMigration(time.Now(), "test")
+	migration := models.NewTimestampMigration(time.Now(), "test")
 
 	err = repo.Apply("this is not SQL", migration)
 	assert.ErrorContains(t, err, "syntax error")
@@ -230,7 +230,7 @@ func TestMigrationDBRepo_RevertMalformedSql(t *testing.T) {
 	db := bolttest.NewTestDB(t, "postgres")
 	repo, err := repositories.NewMigrationDBRepo(db)
 	assert.NilError(t, err)
-	migration := models.NewMigration(time.Now(), "test")
+	migration := models.NewTimestampMigration(time.Now(), "test")
 	migration.Applied = true
 
 	err = repo.Revert("this is not SQL", migration)

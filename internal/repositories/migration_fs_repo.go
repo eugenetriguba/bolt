@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -87,6 +88,19 @@ func (mr *MigrationFsRepo) Get(version string) (*models.Migration, error) {
 	return migration, nil
 }
 
+func (mr *MigrationFsRepo) Latest() (*models.Migration, error) {
+	entries, err := os.ReadDir(mr.migrationsDirPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(entries) > 0 {
+		return dirEntryToMigration(entries[len(entries)-1])
+	}
+
+	return nil, nil
+}
+
 func (mr *MigrationFsRepo) List() (map[string]*models.Migration, error) {
 	entries, err := os.ReadDir(mr.migrationsDirPath)
 	if err != nil {
@@ -95,22 +109,30 @@ func (mr *MigrationFsRepo) List() (map[string]*models.Migration, error) {
 
 	var migrations = make(map[string]*models.Migration)
 	for _, entry := range entries {
-		parts := strings.SplitN(entry.Name(), "_", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf(
-				"%s is an invalid migration name: expected a "+
-					"migration directory of the format <version>_<message>",
-				entry.Name(),
-			)
+		migration, err := dirEntryToMigration(entry)
+		if err != nil {
+			return nil, err
 		}
-		migrations[parts[0]] = &models.Migration{
-			Version: parts[0],
-			Message: parts[1],
-			Applied: false,
-		}
+		migrations[migration.Version] = migration
 	}
 
 	return migrations, nil
+}
+
+func dirEntryToMigration(entry fs.DirEntry) (*models.Migration, error) {
+	parts := strings.SplitN(entry.Name(), "_", 2)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf(
+			"%s is an invalid migration name: expected a "+
+				"migration directory of the format <version>_<message>",
+			entry.Name(),
+		)
+	}
+	return &models.Migration{
+		Version: parts[0],
+		Message: parts[1],
+		Applied: false,
+	}, nil
 }
 
 func (mr *MigrationFsRepo) ReadUpgradeScript(

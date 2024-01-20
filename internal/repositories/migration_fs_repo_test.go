@@ -45,7 +45,7 @@ func TestMigrationFsRepoCreate(t *testing.T) {
 	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
 	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
-	migration := models.NewMigration(time.Now(), "add users table")
+	migration := models.NewTimestampMigration(time.Now(), "add users table")
 
 	err = repo.Create(migration)
 	assert.NilError(t, err)
@@ -62,7 +62,7 @@ func TestMigrationFsRepoReadUpgradeAndDowngradeScript(t *testing.T) {
 	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
 
-	migration := models.NewMigration(time.Now(), "add users table")
+	migration := models.NewTimestampMigration(time.Now(), "add users table")
 	err = repo.Create(migration)
 	assert.NilError(t, err)
 
@@ -94,11 +94,11 @@ func TestMigrationFsRepo_List(t *testing.T) {
 	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
 	assert.NilError(t, err)
 
-	migration1 := models.NewMigration(
+	migration1 := models.NewTimestampMigration(
 		time.Date(2020, 10, 12, 1, 1, 1, 1, time.UTC),
 		"migration_1",
 	)
-	migration2 := models.NewMigration(
+	migration2 := models.NewTimestampMigration(
 		time.Date(2022, 10, 12, 1, 1, 1, 1, time.UTC),
 		"migration_2",
 	)

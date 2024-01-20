@@ -3,10 +3,8 @@ package commands
 import (
 	"context"
 	"flag"
-	"time"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/output"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/bolt/internal/services"
@@ -70,8 +68,7 @@ func (cmd *NewCmd) Execute(
 		return subcommands.ExitFailure
 	}
 
-	migration := models.NewMigration(time.Now(), cmd.message)
-	err = migrationService.CreateMigration(migration)
+	err = migrationService.CreateMigration(cfg.Migrations.VersionStyle, cmd.message)
 	if err != nil {
 		consoleOutputter.Error(err.Error())
 		return subcommands.ExitFailure

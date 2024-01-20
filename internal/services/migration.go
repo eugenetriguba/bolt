@@ -3,7 +3,10 @@ package services
 import (
 	"fmt"
 	"sort"
+	"strconv"
+	"time"
 
+	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/output"
 	"github.com/eugenetriguba/bolt/internal/repositories"
@@ -195,7 +198,26 @@ func (ms *MigrationService) RevertMigration(migration *models.Migration) error {
 	return nil
 }
 
-func (ms *MigrationService) CreateMigration(migration *models.Migration) error {
+func (ms *MigrationService) CreateMigration(versionStyle configloader.VersionStyle, message string) error {
+	var migration *models.Migration
+
+	if versionStyle == configloader.VersionStyleTimestamp {
+		migration = models.NewTimestampMigration(time.Now(), message)
+	} else {
+		var currentVerison uint64 = 0
+		latestMigration, err := ms.fsRepo.Latest()
+		if err != nil {
+			return err
+		}
+		if latestMigration != nil {
+			currentVerison, err = strconv.ParseUint(latestMigration.Version, 10, 64)
+			if err != nil {
+				return err
+			}
+		}
+		migration = models.NewSequentialMigration(currentVerison+1, message)
+	}
+
 	err := ms.fsRepo.Create(migration)
 	if err != nil {
 		return err
