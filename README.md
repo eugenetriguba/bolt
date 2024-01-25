@@ -23,8 +23,6 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
 
 - **Time-Travel with Ease**: ⏳ - Migrate or downgrade to any specific point in time. Bolt allows you to specify a specific migration version to migrate or downgrade to, allowing you to easily time-travel to any point in your database's history.
 
-- **Safe and Reliable**: 🛡️ - Built with safety and reliability in mind, Bolt ensures your migrations are executed smoothly, with clear logging and error handling.
-
 ## Table of Contents
 
 - [Installation](#installation)
