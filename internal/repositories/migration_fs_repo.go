@@ -27,7 +27,9 @@ type MigrationFsRepo struct {
 	migrationsDirPath string
 }
 
-func NewMigrationFsRepo(migrationsConfig *configloader.MigrationsConfig) (*MigrationFsRepo, error) {
+func NewMigrationFsRepo(
+	migrationsConfig *configloader.MigrationsConfig,
+) (*MigrationFsRepo, error) {
 	fileInfo, err := os.Stat(migrationsConfig.DirectoryPath)
 	if errors.Is(err, os.ErrNotExist) {
 		err = os.MkdirAll(migrationsConfig.DirectoryPath, 0755)

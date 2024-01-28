@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/eugenetriguba/bolt/internal/models"
@@ -91,19 +92,22 @@ func (mr *MigrationDBRepo) Apply(
 	sqlParser := sqlparse.NewSqlParser(strings.NewReader(upgradeScript))
 	execOptions, err := sqlParser.Parse()
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to parse sql file for upgrade script: %w", err)
 	}
 
 	if execOptions.UseTransaction {
 		tx, err := mr.db.Begin()
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to start transaction during upgrade script execution: %w",
+				err,
+			)
 		}
 		defer tx.Rollback()
 
 		_, err = tx.Exec(upgradeScript)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to execute upgrade script: %w", err)
 		}
 
 		_, err = tx.Exec(
@@ -111,16 +115,22 @@ func (mr *MigrationDBRepo) Apply(
 			migration.Version,
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to insert applied migration to bolt_migrations table: %w",
+				err,
+			)
 		}
 		err = tx.Commit()
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to commit transaction during upgrade script execution: %w",
+				err,
+			)
 		}
 	} else {
 		_, err = mr.db.Exec(upgradeScript)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to execute upgrade script: %w", err)
 		}
 
 		_, err = mr.db.Exec(
@@ -128,7 +138,10 @@ func (mr *MigrationDBRepo) Apply(
 			migration.Version,
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to insert applied migration to bolt_migrations table: %w",
+				err,
+			)
 		}
 	}
 
@@ -146,19 +159,22 @@ func (mr *MigrationDBRepo) Revert(
 	sqlParser := sqlparse.NewSqlParser(strings.NewReader(downgradeScript))
 	execOptions, err := sqlParser.Parse()
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to parse sql file for downgrade script: %w", err)
 	}
 
 	if execOptions.UseTransaction {
 		tx, err := mr.db.Begin()
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to start transaction during downgrade script execution: %w",
+				err,
+			)
 		}
 		defer tx.Rollback()
 
 		_, err = tx.Exec(downgradeScript)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to execute downgrade script: %w", err)
 		}
 
 		_, err = tx.Exec(
@@ -166,17 +182,23 @@ func (mr *MigrationDBRepo) Revert(
 			migration.Version,
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to remove reverted migration from bolt_migrations table: %w",
+				err,
+			)
 		}
 
 		err = tx.Commit()
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to commit transaction during downgrade script execution: %w",
+				err,
+			)
 		}
 	} else {
 		_, err = mr.db.Exec(downgradeScript)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to execute downgrade script: %w", err)
 		}
 
 		_, err = mr.db.Exec(
@@ -184,7 +206,10 @@ func (mr *MigrationDBRepo) Revert(
 			migration.Version,
 		)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"unable to remove reverted migration from bolt_migrations table: %w",
+				err,
+			)
 		}
 	}
 
