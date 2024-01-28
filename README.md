@@ -51,6 +51,7 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
     - [`bolt up`](#bolt-up)
     - [`bolt down`](#bolt-down)
     - [`bolt status`](#bolt-status)
+    - [`bolt version`](#bolt-version)
   - [Script Execution Options](#script-execution-options)
 - [Explanation](#explanation)
   - [How Are Migration Scripts Executed?](#how-are-migration-scripts-executed)
@@ -337,6 +338,14 @@ down [-version|-v]:
 $ bolt help status
 status:
 	List the database migrations and their statuses
+```
+
+#### `bolt version`
+
+```bash
+$ bolt help version
+version:
+	Show the current version of Bolt
 ```
 
 ### Script Execution Options
