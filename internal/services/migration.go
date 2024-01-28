@@ -198,7 +198,10 @@ func (ms *MigrationService) RevertMigration(migration *models.Migration) error {
 	return nil
 }
 
-func (ms *MigrationService) CreateMigration(versionStyle configloader.VersionStyle, message string) error {
+func (ms *MigrationService) CreateMigration(
+	versionStyle configloader.VersionStyle,
+	message string,
+) error {
 	var migration *models.Migration
 
 	if versionStyle == configloader.VersionStyleTimestamp {

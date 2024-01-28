@@ -50,15 +50,7 @@ type Config struct {
 
 type MigrationsConfig struct {
 	DirectoryPath string       `toml:"directory_path" envconfig:"BOLT_MIGRATIONS_DIR_PATH"`
-	VersionStyle  VersionStyle `toml:"version_style" envconfig:"BOLT_MIGRATIONS_VERSION_STYLE"`
-}
-
-func (mc *MigrationsConfig) Validate() error {
-	if mc.VersionStyle != VersionStyleSequential && mc.VersionStyle != VersionStyleTimestamp {
-		return ErrInvalidVersionStyle
-	}
-
-	return nil
+	VersionStyle  VersionStyle `toml:"version_style"  envconfig:"BOLT_MIGRATIONS_VERSION_STYLE"`
 }
 
 type ConnectionConfig struct {
@@ -94,9 +86,9 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	err = cfg.Migrations.Validate()
-	if err != nil {
-		return nil, err
+	if cfg.Migrations.VersionStyle != VersionStyleSequential &&
+		cfg.Migrations.VersionStyle != VersionStyleTimestamp {
+		return nil, ErrInvalidVersionStyle
 	}
 
 	return &cfg, nil

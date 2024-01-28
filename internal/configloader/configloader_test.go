@@ -20,6 +20,19 @@ func TestNewConfigDefaults(t *testing.T) {
 	assert.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleSequential)
 }
 
+func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
+	fileCfg := configloader.Config{
+		Migrations: configloader.MigrationsConfig{
+			DirectoryPath: "myfancymigrations",
+			VersionStyle:  "invalid",
+		},
+	}
+	bolttest.CreateConfigFile(t, &fileCfg, "bolt.toml")
+
+	_, err := configloader.NewConfig()
+	assert.ErrorIs(t, err, configloader.ErrInvalidVersionStyle)
+}
+
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 	expectedCfg := configloader.Config{
 		Migrations: configloader.MigrationsConfig{
