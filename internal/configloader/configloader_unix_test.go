@@ -8,7 +8,7 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate"
 )
 
 func TestNewConfigUnixSearchesToRootFilePath(t *testing.T) {
@@ -18,11 +18,11 @@ func TestNewConfigUnixSearchesToRootFilePath(t *testing.T) {
 	bolttest.CreateConfigFile(t, &expectedCfg, "/bolt.toml")
 
 	homedir, err := os.UserHomeDir()
-	assert.NilError(t, err)
+	checkmate.AssertNil(t, err)
 	bolttest.ChangeCwd(t, homedir)
 
 	cfg, err := configloader.NewConfig()
-	assert.NilError(t, err)
+	checkmate.AssertNil(t, err)
 
-	assert.DeepEqual(t, *cfg, expectedCfg)
+	checkmate.AssertDeepEqual(t, *cfg, expectedCfg)
 }

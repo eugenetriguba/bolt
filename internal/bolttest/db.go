@@ -8,12 +8,12 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/storage"
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate"
 )
 
 func NewTestConnectionConfig(t *testing.T, driver string) *configloader.ConnectionConfig {
 	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
-	assert.NilError(t, err)
+	checkmate.AssertNil(t, err)
 
 	return &configloader.ConnectionConfig{
 		Driver:   driver,
@@ -29,7 +29,7 @@ func NewTestDB(t *testing.T, driver string) *sql.DB {
 	connectionConfig := NewTestConnectionConfig(t, driver)
 	connInfo := storage.DBConnectionString(connectionConfig)
 	db, err := storage.DBConnect(driver, connInfo)
-	assert.NilError(t, err)
+	checkmate.AssertNil(t, err)
 	t.Cleanup(func() {
 		_, err = db.Exec(`
 			DO $$ DECLARE rec RECORD;
@@ -41,9 +41,9 @@ func NewTestDB(t *testing.T, driver string) *sql.DB {
 			END LOOP;
 			END $$;
 		`)
-		assert.NilError(t, err)
+		checkmate.AssertNil(t, err)
 		err = db.Close()
-		assert.NilError(t, err)
+		checkmate.AssertNil(t, err)
 	})
 	return db
 }

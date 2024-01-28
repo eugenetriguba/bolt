@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate"
 )
 
 func NewConsoleOutputterWithWriters(stdout io.Writer, stderr io.Writer) ConsoleOutputter {
@@ -19,8 +19,8 @@ func TestConsoleOutputter_Output(t *testing.T) {
 
 	consoleOutputter.Output("test string")
 
-	assert.Equal(t, stdout.String(), "test string\n")
-	assert.Equal(t, stderr.String(), "")
+	checkmate.AssertEqual(t, stdout.String(), "test string\n")
+	checkmate.AssertEqual(t, stderr.String(), "")
 }
 
 func TestConsoleOutputter_Error(t *testing.T) {
@@ -30,8 +30,8 @@ func TestConsoleOutputter_Error(t *testing.T) {
 
 	consoleOutputter.Error("test string")
 
-	assert.Equal(t, stdout.String(), "")
-	assert.Equal(t, stderr.String(), "test string\n")
+	checkmate.AssertEqual(t, stdout.String(), "")
+	checkmate.AssertEqual(t, stderr.String(), "test string\n")
 }
 
 func TestConsoleOutputter_Table(t *testing.T) {
@@ -70,7 +70,7 @@ func TestConsoleOutputter_Table(t *testing.T) {
 
 		consoleOutputter.Table(tc.headers, tc.rows)
 
-		assert.Equal(t, stdout.String(), tc.expectedStdout)
-		assert.Equal(t, stderr.String(), "")
+		checkmate.AssertEqual(t, stdout.String(), tc.expectedStdout)
+		checkmate.AssertEqual(t, stderr.String(), "")
 	}
 }

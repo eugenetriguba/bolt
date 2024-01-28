@@ -7,16 +7,16 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate"
 )
 
 func TestNewConfigMigrationsDirPathDefault(t *testing.T) {
 	bolttest.ChangeCwd(t, os.TempDir())
 
 	cfg, err := configloader.NewConfig()
-	assert.NilError(t, err)
+	checkmate.AssertNil(t, err)
 
-	assert.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
+	checkmate.AssertEqual(t, cfg.Migrations.DirectoryPath, "migrations")
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
@@ -34,8 +34,8 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 	bolttest.CreateConfigFile(t, &expectedCfg, "bolt.toml")
 
 	cfg, err := configloader.NewConfig()
-	assert.NilError(t, err)
-	assert.DeepEqual(t, *cfg, expectedCfg)
+	checkmate.AssertNil(t, err)
+	checkmate.AssertDeepEqual(t, *cfg, expectedCfg)
 }
 
 func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
@@ -72,6 +72,6 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	t.Setenv("BOLT_DB_CONN_DRIVER", envCfg.Connection.Driver)
 
 	cfg, err := configloader.NewConfig()
-	assert.NilError(t, err)
-	assert.DeepEqual(t, *cfg, envCfg)
+	checkmate.AssertNil(t, err)
+	checkmate.AssertDeepEqual(t, *cfg, envCfg)
 }
