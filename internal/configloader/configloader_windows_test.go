@@ -9,7 +9,7 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"github.com/eugenetriguba/checkmate"
+	"github.com/eugenetriguba/checkmate/assert"
 )
 
 func TestNewConfigWindowsSearchesToRootFilePath(t *testing.T) {
@@ -18,14 +18,14 @@ func TestNewConfigWindowsSearchesToRootFilePath(t *testing.T) {
 	}
 	configPath := filepath.Join(os.Getenv("SystemDrive"), "bolt.toml")
 	bolttest.CreateConfigFile(t, &expectedCfg, configPath)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	homedir, err := os.UserHomeDir()
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 	bolttest.ChangeCwd(t, homedir)
 
 	cfg, err := configloader.NewConfig()
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
-	checkmate.AssertDeepEqual(t, *cfg, expectedCfg)
+	assert.DeepEqual(t, *cfg, expectedCfg)
 }

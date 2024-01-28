@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/eugenetriguba/bolt/internal/sqlparse"
-	"github.com/eugenetriguba/checkmate"
+	"github.com/eugenetriguba/checkmate/assert"
 )
 
 func TestSqlParser_Parse(t *testing.T) {
@@ -49,8 +49,8 @@ func TestSqlParser_Parse(t *testing.T) {
 		sqlParser := sqlparse.NewSqlParser(strings.NewReader(tc.buffer))
 
 		execOptions, err := sqlParser.Parse()
-		checkmate.AssertNil(t, err)
+		assert.Nil(t, err)
 
-		checkmate.AssertDeepEqual(t, execOptions, tc.expectedExecutionOptions)
+		assert.DeepEqual(t, execOptions, tc.expectedExecutionOptions)
 	}
 }

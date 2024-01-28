@@ -10,12 +10,12 @@ import (
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
-	"github.com/eugenetriguba/checkmate"
+	"github.com/eugenetriguba/checkmate/assert"
 )
 
 func assertFileExists(t *testing.T, path string) {
 	_, err := os.Stat(path)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 }
 
 func TestNewMigrationFsRepoCreatesDirIfNotExists(t *testing.T) {
@@ -24,7 +24,7 @@ func TestNewMigrationFsRepoCreatesDirIfNotExists(t *testing.T) {
 	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
 
 	_, err := repositories.NewMigrationFsRepo(&migrationsConfig)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	assertFileExists(t, migrationsDir)
 }
@@ -34,21 +34,21 @@ func TestNewMigrationFsRepoMigrationDirIsFile(t *testing.T) {
 	migrationsDir := filepath.Join(tempDir, "migrations")
 	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
 	_, err := os.Create(migrationsDir)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	_, err = repositories.NewMigrationFsRepo(&migrationsConfig)
-	checkmate.AssertErrorContains(t, err, "is not a directory")
+	assert.ErrorContains(t, err, "is not a directory")
 }
 
 func TestMigrationFsRepoCreate(t *testing.T) {
 	tempDir := t.TempDir()
 	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
 	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "add users table")
 
 	err = repo.Create(migration)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
 	assertFileExists(t, filepath.Join(tempDir, migrationDirName))
@@ -60,11 +60,11 @@ func TestMigrationFsRepoReadUpgradeAndDowngradeScript(t *testing.T) {
 	tempDir := t.TempDir()
 	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
 	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	migration := models.NewTimestampMigration(time.Now(), "add users table")
 	err = repo.Create(migration)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
 	expectedUpgradeScriptContents := []byte("CREATE TABLE users(id int PRIMARY KEY);")
@@ -81,18 +81,18 @@ func TestMigrationFsRepoReadUpgradeAndDowngradeScript(t *testing.T) {
 	)
 
 	upgradeScriptContents, err := repo.ReadUpgradeScript(migration)
-	checkmate.AssertNil(t, err)
-	checkmate.AssertEqual(t, upgradeScriptContents, string(expectedUpgradeScriptContents))
+	assert.Nil(t, err)
+	assert.Equal(t, upgradeScriptContents, string(expectedUpgradeScriptContents))
 	downgradeScriptContents, err := repo.ReadDowngradeScript(migration)
-	checkmate.AssertNil(t, err)
-	checkmate.AssertEqual(t, downgradeScriptContents, string(expectedDowngradeScriptContents))
+	assert.Nil(t, err)
+	assert.Equal(t, downgradeScriptContents, string(expectedDowngradeScriptContents))
 }
 
 func TestMigrationFsRepo_List(t *testing.T) {
 	tempDir := t.TempDir()
 	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
 	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	migration1 := models.NewTimestampMigration(
 		time.Date(2020, 10, 12, 1, 1, 1, 1, time.UTC),
@@ -103,13 +103,13 @@ func TestMigrationFsRepo_List(t *testing.T) {
 		"migration_2",
 	)
 	err = repo.Create(migration1)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 	repo.Create(migration2)
-	checkmate.AssertNil(t, err)
+	assert.Nil(t, err)
 
 	migrations, err := repo.List()
-	checkmate.AssertNil(t, err)
-	checkmate.AssertEqual(t, len(migrations), 2)
-	checkmate.AssertDeepEqual(t, migrations[migration1.Version], migration1)
-	checkmate.AssertDeepEqual(t, migrations[migration2.Version], migration2)
+	assert.Nil(t, err)
+	assert.Equal(t, len(migrations), 2)
+	assert.DeepEqual(t, migrations[migration1.Version], migration1)
+	assert.DeepEqual(t, migrations[migration2.Version], migration2)
 }

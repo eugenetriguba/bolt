@@ -287,6 +287,7 @@ driver =
 All configuration file settings have corresponding environment variables.
 
 - `BOLT_MIGRATIONS_DIR_PATH`
+- `BOLT_MIGRATIONS_VERSION_STYLE`
 - `BOLT_DB_CONN_HOST`
 - `BOLT_DB_CONN_PORT`
 - `BOLT_DB_CONN_USER`
