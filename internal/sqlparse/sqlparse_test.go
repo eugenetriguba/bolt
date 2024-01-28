@@ -1,6 +1,9 @@
 package sqlparse_test
 
 import (
+	"bytes"
+	"errors"
+	"io"
 	"strings"
 	"testing"
 
@@ -9,12 +12,10 @@ import (
 )
 
 func TestSqlParser_Parse(t *testing.T) {
-	type test struct {
+	testCases := []struct {
 		buffer                   string
 		expectedExecutionOptions *sqlparse.ExecutionOptions
-	}
-
-	tests := []test{
+	}{
 		{
 			buffer:                   "-- bolt: no-transaction",
 			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: false},
@@ -45,7 +46,7 @@ func TestSqlParser_Parse(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range testCases {
 		sqlParser := sqlparse.NewSqlParser(strings.NewReader(tc.buffer))
 
 		execOptions, err := sqlParser.Parse()
@@ -53,4 +54,33 @@ func TestSqlParser_Parse(t *testing.T) {
 
 		assert.DeepEqual(t, execOptions, tc.expectedExecutionOptions)
 	}
+}
+
+type ErrReader struct {
+	Reader  io.Reader
+	ErrCond string
+}
+
+func (er *ErrReader) Read(p []byte) (int, error) {
+	n, err := er.Reader.Read(p)
+	if err != nil {
+		return n, err
+	}
+
+	if bytes.Contains(p[:n], []byte(er.ErrCond)) {
+		return n, errors.New("error: unwanted input encountered")
+	}
+
+	return n, nil
+}
+
+func TestSqlParserParseError(t *testing.T) {
+	reader := &ErrReader{
+		Reader:  strings.NewReader("    "),
+		ErrCond: " ",
+	}
+	sqlParser := sqlparse.NewSqlParser(reader)
+	_, err := sqlParser.Parse()
+	assert.NotNil(t, err)
+	assert.ErrorContains(t, err, "unwanted input encountered")
 }
