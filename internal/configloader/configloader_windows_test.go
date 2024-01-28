@@ -1,4 +1,4 @@
-// go:build windows
+//go:build windows
 
 package configloader_test
 
@@ -14,7 +14,10 @@ import (
 
 func TestNewConfigWindowsSearchesToRootFilePath(t *testing.T) {
 	expectedCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{DirectoryPath: "differentmigrationsdir"},
+		Migrations: configloader.MigrationsConfig{
+			DirectoryPath: "differentmigrationsdir",
+			VersionStyle:  configloader.VersionStyleSequential,
+		},
 	}
 	configPath := filepath.Join(os.Getenv("SystemDrive"), "bolt.toml")
 	bolttest.CreateConfigFile(t, &expectedCfg, configPath)

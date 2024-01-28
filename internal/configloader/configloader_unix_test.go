@@ -1,4 +1,4 @@
-// go:build unix
+//go:build unix
 
 package configloader_test
 
@@ -13,7 +13,10 @@ import (
 
 func TestNewConfigUnixSearchesToRootFilePath(t *testing.T) {
 	expectedCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{DirectoryPath: "differentmigrationsdir"},
+		Migrations: configloader.MigrationsConfig{
+			DirectoryPath: "differentmigrationsdir",
+			VersionStyle:  configloader.VersionStyleSequential,
+		},
 	}
 	bolttest.CreateConfigFile(t, &expectedCfg, "/bolt.toml")
 
