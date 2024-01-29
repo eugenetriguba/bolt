@@ -25,7 +25,10 @@ func NewMigrationDBRepo(db *sql.DB) (*MigrationDBRepo, error) {
 		);
 	`)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"unable to create bolt_migrations database table: %w",
+			err,
+		)
 	}
 
 	return &MigrationDBRepo{db: db}, nil
@@ -38,7 +41,11 @@ func NewMigrationDBRepo(db *sql.DB) (*MigrationDBRepo, error) {
 func (mr *MigrationDBRepo) List() (map[string]*models.Migration, error) {
 	rows, err := mr.db.Query(`SELECT version FROM bolt_migrations;`)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(
+			"unable to execute query to select versions from "+
+				"bolt_migrations database table: %w",
+			err,
+		)
 	}
 	defer rows.Close()
 
@@ -47,7 +54,10 @@ func (mr *MigrationDBRepo) List() (map[string]*models.Migration, error) {
 		var version string
 		err := rows.Scan(&version)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"unable to scan version row from applied migrations: %w",
+				err,
+			)
 		}
 		trimmedVersion := strings.TrimSpace(version)
 		migrations[trimmedVersion] = &models.Migration{

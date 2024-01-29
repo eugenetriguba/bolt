@@ -15,16 +15,15 @@ import (
 func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
 	db, err := sql.Open(driver, connectionParams)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid database connection parameters: %w", err)
 	}
 
-	// Note: `sql.Open` only validates the connection string we provided
-	// it is sane. It doesn't actually open up a connection to the database.
-	// For that, we ping the database to ensure the connection string is fully
-	// valid.
+	// Note: `sql.Open` only validates the connection string we provided is sane.
+	// It doesn't actually open up a connection to the database. For that, we ping
+	// the database to ensure the connection string is fully valid.
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
 
 	return db, nil

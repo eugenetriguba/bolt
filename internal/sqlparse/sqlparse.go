@@ -2,6 +2,7 @@ package sqlparse
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -37,7 +38,7 @@ func (sp *SqlParser) Parse() (*ExecutionOptions, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing sql file encountered an error: %w", err)
 	}
 
 	return options, nil
