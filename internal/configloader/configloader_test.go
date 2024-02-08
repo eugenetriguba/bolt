@@ -8,6 +8,7 @@ import (
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/checkmate/assert"
+	"github.com/eugenetriguba/checkmate/check"
 )
 
 func TestNewConfigDefaults(t *testing.T) {
@@ -16,8 +17,8 @@ func TestNewConfigDefaults(t *testing.T) {
 	cfg, err := configloader.NewConfig()
 	assert.Nil(t, err)
 
-	assert.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
-	assert.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleSequential)
+	check.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
+	check.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleSequential)
 }
 
 func TestNewConfigWithInvalidVersionStyle(t *testing.T) {

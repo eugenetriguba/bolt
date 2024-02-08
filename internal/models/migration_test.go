@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/eugenetriguba/bolt/internal/models"
-	"github.com/eugenetriguba/checkmate/assert"
+	"github.com/eugenetriguba/checkmate/check"
 )
 
 func TestNewTimestampMigration(t *testing.T) {
@@ -13,21 +13,21 @@ func TestNewTimestampMigration(t *testing.T) {
 
 	m := models.NewTimestampMigration(timestamp, "test message")
 
-	assert.Equal(t, m.Version, "20200101000000")
-	assert.Equal(t, m.Message, "test message")
-	assert.Equal(t, m.Applied, false)
+	check.Equal(t, m.Version, "20200101000000")
+	check.Equal(t, m.Message, "test message")
+	check.Equal(t, m.Applied, false)
 }
 
 func TestNewSequentialMigration(t *testing.T) {
 	m := models.NewSequentialMigration(1, "test message")
 
-	assert.Equal(t, m.Version, "001")
-	assert.Equal(t, m.Message, "test message")
-	assert.Equal(t, m.Applied, false)
+	check.Equal(t, m.Version, "001")
+	check.Equal(t, m.Message, "test message")
+	check.Equal(t, m.Applied, false)
 
 	m = models.NewSequentialMigration(100, "test message")
 
-	assert.Equal(t, m.Version, "100")
-	assert.Equal(t, m.Message, "test message")
-	assert.Equal(t, m.Applied, false)
+	check.Equal(t, m.Version, "100")
+	check.Equal(t, m.Message, "test message")
+	check.Equal(t, m.Applied, false)
 }
