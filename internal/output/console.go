@@ -18,12 +18,18 @@ func NewConsoleOutputter() ConsoleOutputter {
 
 func (c ConsoleOutputter) Output(message string) error {
 	_, err := fmt.Fprintln(c.stdout, message)
-	return fmt.Errorf("unable to print message %s: %w", message, err)
+	if err != nil {
+		return fmt.Errorf("unable to print message %s: %w", message, err)
+	}
+	return nil
 }
 
 func (c ConsoleOutputter) Error(message string) error {
 	_, err := fmt.Fprintln(c.stderr, message)
-	return fmt.Errorf("unable to print message %s: %w", message, err)
+	if err != nil {
+		return fmt.Errorf("unable to print message %s: %w", message, err)
+	}
+	return nil
 }
 
 func (c ConsoleOutputter) Table(headers []string, rows [][]string) error {
