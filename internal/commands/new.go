@@ -48,13 +48,13 @@ func (cmd *NewCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
@@ -64,13 +64,13 @@ func (cmd *NewCmd) Execute(
 		consoleOutputter,
 	)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	err = migrationService.CreateMigration(cfg.Migrations.VersionStyle, cmd.message)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
