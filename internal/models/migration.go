@@ -30,3 +30,7 @@ func NewSequentialMigration(version uint64, message string) *Migration {
 		Applied: false,
 	}
 }
+
+func (m *Migration) Name() string {
+	return fmt.Sprintf("%s_%s", m.Version, m.Message)
+}
