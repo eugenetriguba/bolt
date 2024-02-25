@@ -2,10 +2,16 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	_ "github.com/lib/pq"
+)
+
+var (
+	ErrInvalidConnectionString = errors.New("invalid database connection parameters provided")
+	ErrUnableToConnect         = errors.New("unable to open connection to database")
 )
 
 // DBConnect establishes a connection to the database using the driver
@@ -15,7 +21,7 @@ import (
 func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
 	db, err := sql.Open(driver, connectionParams)
 	if err != nil {
-		return nil, fmt.Errorf("invalid database connection parameters: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrInvalidConnectionString, err)
 	}
 
 	// Note: `sql.Open` only validates the connection string we provided is sane.
@@ -23,7 +29,7 @@ func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
 	// the database to ensure the connection string is fully valid.
 	err = db.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("unable to ping database: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrUnableToConnect, err)
 	}
 
 	return db, nil

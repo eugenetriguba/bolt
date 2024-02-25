@@ -10,7 +10,7 @@ import (
 	"github.com/eugenetriguba/checkmate/assert"
 )
 
-func TestDBConnectWithPostgres(t *testing.T) {
+func TestDBConnect_Success(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "postgres")
 
 	conn, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
@@ -21,15 +21,17 @@ func TestDBConnectWithPostgres(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestDBConnectMalformedConnectionString(t *testing.T) {
+func TestDBConnect_BadConnectionString(t *testing.T) {
 	_, err := storage.DBConnect("postgres", "pizza=123")
+	assert.ErrorIs(t, err, storage.ErrUnableToConnect)
 	assert.ErrorContains(t, err, "connection refused")
 }
 
-func TestDBConnectUnsupportedDriver(t *testing.T) {
+func TestDBConnect_UnsupportedDriver(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "redis")
 
 	_, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
+	assert.ErrorIs(t, err, storage.ErrInvalidConnectionString)
 	assert.ErrorContains(t, err, `unknown driver "redis"`)
 }
 
