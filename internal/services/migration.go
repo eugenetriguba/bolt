@@ -41,7 +41,14 @@ func (ms *MigrationService) ApplyAllMigrations() error {
 
 	for _, migration := range migrations {
 		if !migration.Applied {
-			ms.ApplyMigration(migration)
+			err := ms.ApplyMigration(migration)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to apply migration %s: %w",
+					migration.Name(),
+					err,
+				)
+			}
 		}
 	}
 
@@ -75,7 +82,11 @@ func (ms *MigrationService) ApplyUpToVersion(version string) error {
 		if !migration.Applied {
 			err := ms.ApplyMigration(migration)
 			if err != nil {
-				return err
+				return fmt.Errorf(
+					"unable to apply migration %s: %w",
+					migration.Name(),
+					err,
+				)
 			}
 		}
 
@@ -124,7 +135,14 @@ func (ms *MigrationService) RevertAllMigrations() error {
 
 	for _, migration := range migrations {
 		if migration.Applied {
-			ms.RevertMigration(migration)
+			err := ms.RevertMigration(migration)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to revert migration %s: %w",
+					migration.Name(),
+					err,
+				)
+			}
 		}
 	}
 
@@ -158,7 +176,11 @@ func (ms *MigrationService) RevertDownToVersion(version string) error {
 		if migration.Applied {
 			err := ms.RevertMigration(migration)
 			if err != nil {
-				return err
+				return fmt.Errorf(
+					"unable to revert migration %s: %w",
+					migration.Name(),
+					err,
+				)
 			}
 		}
 
