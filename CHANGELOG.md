@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation on `bolt version` command.
 - Ability to use sequentially versioned or timestamp-based migration versions.
 
+### Changed
+
+- Moved `cli.Run` from `pkg` to `internal`
+
 ## [0.2.1] - 2024-01-14
 
 ### Fixed
