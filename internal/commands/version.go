@@ -34,7 +34,7 @@ func (cmd *VersionCmd) Execute(
 	consoleOutputter := output.NewConsoleOutputter()
 	err := consoleOutputter.Output("bolt v0.2.1")
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 

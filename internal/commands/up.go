@@ -49,7 +49,7 @@ func (cmd *UpCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
@@ -58,20 +58,20 @@ func (cmd *UpCmd) Execute(
 		storage.DBConnectionString(&cfg.Connection),
 	)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 	defer db.Close()
 
 	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
@@ -84,13 +84,13 @@ func (cmd *UpCmd) Execute(
 	if cmd.version == "" {
 		err = migrationService.ApplyAllMigrations()
 		if err != nil {
-			consoleOutputter.Error(err.Error())
+			consoleOutputter.Error(err)
 			return subcommands.ExitFailure
 		}
 	} else {
 		err = migrationService.ApplyUpToVersion(cmd.version)
 		if err != nil {
-			consoleOutputter.Error(err.Error())
+			consoleOutputter.Error(err)
 			return subcommands.ExitFailure
 		}
 	}

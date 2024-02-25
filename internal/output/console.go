@@ -24,12 +24,19 @@ func (c ConsoleOutputter) Output(message string) error {
 	return nil
 }
 
+<<<<<<< Updated upstream
 func (c ConsoleOutputter) Error(message string) error {
 	_, err := fmt.Fprintln(c.stderr, message)
 	if err != nil {
 		return fmt.Errorf("unable to print message %s: %w", message, err)
 	}
 	return nil
+=======
+func (c ConsoleOutputter) Error(err error) error {
+	msg := err.Error()
+	_, printErr := fmt.Fprintln(c.stderr, msg)
+	return fmt.Errorf("unable to print message %s: %w", msg, printErr)
+>>>>>>> Stashed changes
 }
 
 func (c ConsoleOutputter) Table(headers []string, rows [][]string) error {

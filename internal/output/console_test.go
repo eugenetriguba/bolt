@@ -2,6 +2,7 @@ package output
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestConsoleOutputter_Error(t *testing.T) {
 	var stderr bytes.Buffer
 	consoleOutputter := NewConsoleOutputterWithWriters(&stdout, &stderr)
 
-	consoleOutputter.Error("test string")
+	consoleOutputter.Error(errors.New("test string"))
 
 	check.Equal(t, stdout.String(), "")
 	check.Equal(t, stderr.String(), "test string\n")

@@ -39,7 +39,7 @@ func (m *StatusCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
@@ -48,20 +48,20 @@ func (m *StatusCmd) Execute(
 		storage.DBConnectionString(&cfg.Connection),
 	)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 	defer db.Close()
 
 	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
@@ -72,7 +72,7 @@ func (m *StatusCmd) Execute(
 	)
 	migrations, err := migrationService.ListMigrations(services.SortOrderAsc)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
