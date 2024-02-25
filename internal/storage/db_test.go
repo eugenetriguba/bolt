@@ -31,7 +31,7 @@ func TestDBConnect_UnsupportedDriver(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "redis")
 
 	_, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
-	assert.ErrorIs(t, err, storage.ErrInvalidConnectionString)
+	assert.ErrorIs(t, err, storage.ErrMalformedConnectionString)
 	assert.ErrorContains(t, err, `unknown driver "redis"`)
 }
 

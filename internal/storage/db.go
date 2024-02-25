@@ -10,18 +10,22 @@ import (
 )
 
 var (
-	ErrInvalidConnectionString = errors.New("invalid database connection parameters provided")
-	ErrUnableToConnect         = errors.New("unable to open connection to database")
+	ErrMalformedConnectionString = errors.New("malformed database connection parameters provided")
+	ErrUnableToConnect           = errors.New("unable to open connection to database")
 )
 
 // DBConnect establishes a connection to the database using the driver
-// and connection information.
+// and connection information. Only "postgres" is supported as the driver.
 //
-// Note that only "postgres" is supported as the driver right now.
+// The following errors may be returned:
+//   - ErrMalformedConnectionString: The provided connection parameters are
+//     not in a valid format.
+//   - ErrUnableToConnect: Unable to make a connection to the database with
+//     the provided connection parameters.
 func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
 	db, err := sql.Open(driver, connectionParams)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidConnectionString, err)
+		return nil, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
 	}
 
 	// Note: `sql.Open` only validates the connection string we provided is sane.
