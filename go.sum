@@ -2,6 +2,8 @@ github.com/BurntSushi/toml v1.3.2 h1:o7IhLm0Msx3BaB+n3Ag7L8EVlByGnpq14C4YWiu/gL8
 github.com/BurntSushi/toml v1.3.2/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/eugenetriguba/checkmate v0.3.0 h1:JqeefDNUGga9VG+jusq2UlVKCFKBlRN1p5JQbl1CmLI=
 github.com/eugenetriguba/checkmate v0.3.0/go.mod h1:IY38Cl4zlNI1dg+wcDYwrbWZfJ9i2/ouWf8C0N8c/do=
+github.com/eugenetriguba/checkmate v0.3.2 h1:vcALwpLLpt0FBxckjuobNFYtBLtlCT2p55Xk4p0SAhk=
+github.com/eugenetriguba/checkmate v0.3.2/go.mod h1:IY38Cl4zlNI1dg+wcDYwrbWZfJ9i2/ouWf8C0N8c/do=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/subcommands v1.2.0 h1:vWQspBTo2nEqTUFita5/KeEWlUL8kQObDFbub/EN9oE=

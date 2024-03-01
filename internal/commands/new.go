@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/output"
@@ -48,29 +49,28 @@ func (cmd *NewCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err)
+		consoleOutputter.Error(fmt.Errorf("unable to retrieve configuration: %w", err))
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err)
+		consoleOutputter.Error(
+			fmt.Errorf("unable to setup local migrations directory: %w", err),
+		)
 		return subcommands.ExitFailure
 	}
 
 	migrationService := services.NewMigrationService(
 		nil,
 		migrationFsRepo,
+		*cfg,
 		consoleOutputter,
 	)
-	if err != nil {
-		consoleOutputter.Error(err)
-		return subcommands.ExitFailure
-	}
 
-	err = migrationService.CreateMigration(cfg.Migrations.VersionStyle, cmd.message)
+	_, err = migrationService.CreateMigration(cmd.message)
 	if err != nil {
-		consoleOutputter.Error(err)
+		consoleOutputter.Error(fmt.Errorf("unable to create new migration: %w", err))
 		return subcommands.ExitFailure
 	}
 

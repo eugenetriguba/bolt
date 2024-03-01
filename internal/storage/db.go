@@ -10,8 +10,10 @@ import (
 )
 
 var (
-	ErrMalformedConnectionString = errors.New("malformed database connection parameters provided")
-	ErrUnableToConnect           = errors.New("unable to open connection to database")
+	ErrMalformedConnectionString = errors.New(
+		"malformed database connection parameters provided",
+	)
+	ErrUnableToConnect = errors.New("unable to open connection to database")
 )
 
 // DBConnect establishes a connection to the database using the driver

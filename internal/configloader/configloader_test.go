@@ -18,7 +18,7 @@ func TestNewConfigDefaults(t *testing.T) {
 	assert.Nil(t, err)
 
 	check.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
-	check.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleSequential)
+	check.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleTimestamp)
 }
 
 func TestNewConfigWithInvalidVersionStyle(t *testing.T) {

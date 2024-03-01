@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -30,4 +31,9 @@ func TestNewSequentialMigration(t *testing.T) {
 	check.Equal(t, m.Version, "100")
 	check.Equal(t, m.Message, "test message")
 	check.Equal(t, m.Applied, false)
+}
+
+func TestName(t *testing.T) {
+	m := models.NewSequentialMigration(1, "test message")
+	check.Equal(t, m.Name(), fmt.Sprintf("%s_%s", m.Version, m.Message))
 }

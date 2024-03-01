@@ -14,42 +14,42 @@ import (
 func TestSqlParser_Parse(t *testing.T) {
 	testCases := []struct {
 		buffer                   string
-		expectedExecutionOptions *sqlparse.ExecutionOptions
+		expectedExecutionOptions sqlparse.ExecutionOptions
 	}{
 		{
 			buffer:                   "-- bolt: no-transaction",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: false},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: false},
 		},
 		{
 			buffer:                   "-- BOLT: no-transaction",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: false},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: false},
 		},
 		{
 			buffer:                   "\n-- bolt: no-transaction",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: true},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: true},
 		},
 		{
 			buffer:                   "",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: true},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: true},
 		},
 		{
 			buffer:                   "--bolt: no-transaction",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: true},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: true},
 		},
 		{
 			buffer:                   "-- bolt : no-transaction",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: true},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: true},
 		},
 		{
 			buffer:                   "-- bolt: no-transaction no-transaction",
-			expectedExecutionOptions: &sqlparse.ExecutionOptions{UseTransaction: false},
+			expectedExecutionOptions: sqlparse.ExecutionOptions{UseTransaction: false},
 		},
 	}
 
 	for _, tc := range testCases {
-		sqlParser := sqlparse.NewSqlParser(strings.NewReader(tc.buffer))
+		sqlParser := sqlparse.NewSqlParser()
 
-		execOptions, err := sqlParser.Parse()
+		execOptions, err := sqlParser.Parse(strings.NewReader(tc.buffer))
 		assert.Nil(t, err)
 
 		assert.DeepEqual(t, execOptions, tc.expectedExecutionOptions)
@@ -79,8 +79,8 @@ func TestSqlParserParseError(t *testing.T) {
 		Reader:  strings.NewReader("    "),
 		ErrCond: " ",
 	}
-	sqlParser := sqlparse.NewSqlParser(reader)
-	_, err := sqlParser.Parse()
+	sqlParser := sqlparse.NewSqlParser()
+	_, err := sqlParser.Parse(reader)
 	assert.NotNil(t, err)
 	assert.ErrorContains(t, err, "unwanted input encountered")
 }

@@ -197,7 +197,7 @@ func TestMigrationDBRepo_ApplyAndRevertWithoutTransaction(t *testing.T) {
 	migration := models.NewTimestampMigration(time.Now(), "test")
 	// CREATE INDEX CONCURRENTLY cannot run inside a transaction.
 	err = repo.Apply(
-		`-- bolt: no-transaction\CREATE INDEX CONCURRENTLY i1 ON tmp(id2);`,
+		`-- bolt: no-transaction\nCREATE INDEX CONCURRENTLY i1 ON tmp(id2);`,
 		migration,
 	)
 	assert.Nil(t, err)

@@ -3,10 +3,10 @@ package commands
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/output"
-	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
@@ -49,7 +49,7 @@ func (cmd *DownCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err)
+		consoleOutputter.Error(fmt.Errorf("unable to retrieve configuration: %w", err))
 		return subcommands.ExitFailure
 	}
 
@@ -58,39 +58,31 @@ func (cmd *DownCmd) Execute(
 		storage.DBConnectionString(&cfg.Connection),
 	)
 	if err != nil {
-		consoleOutputter.Error(err)
+		consoleOutputter.Error(fmt.Errorf("unable to connect to database: %w", err))
 		return subcommands.ExitFailure
 	}
 	defer db.Close()
 
-	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
-	if err != nil {
-		consoleOutputter.Error(err)
-		return subcommands.ExitFailure
-	}
-
-	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
-	if err != nil {
-		consoleOutputter.Error(err)
-		return subcommands.ExitFailure
-	}
-
-	migrationService := services.NewMigrationService(
-		migrationDBRepo,
-		migrationFsRepo,
+	migrationService, err := services.NewMigrationServiceFromConfig(
+		db,
 		consoleOutputter,
+		*cfg,
 	)
+	if err != nil {
+		consoleOutputter.Error(err)
+		return subcommands.ExitFailure
+	}
 
 	if cmd.version == "" {
 		err = migrationService.RevertAllMigrations()
 		if err != nil {
-			consoleOutputter.Error(err)
+			consoleOutputter.Error(fmt.Errorf("unable to revert all migrations: %w", err))
 			return subcommands.ExitFailure
 		}
 	} else {
 		err = migrationService.RevertDownToVersion(cmd.version)
 		if err != nil {
-			consoleOutputter.Error(err)
+			consoleOutputter.Error(fmt.Errorf("unable to revert migrations down to %s: %w", cmd.version, err))
 			return subcommands.ExitFailure
 		}
 	}
