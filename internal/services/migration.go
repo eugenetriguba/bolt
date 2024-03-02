@@ -105,6 +105,8 @@ func (ms MigrationService) ApplyUpToVersion(version string) error {
 		return fmt.Errorf("migration with version %s does not exist", version)
 	}
 	if targetMigration.Applied {
+		// Assumption: If the target migration is applied, all migrations before
+		// it must also be applied.
 		return fmt.Errorf(
 			"migration with version %s is already applied, nothing to apply",
 			version,
