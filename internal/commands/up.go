@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/output"
@@ -49,7 +50,7 @@ func (cmd *UpCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to retrieve configuration: %w", err))
 		return subcommands.ExitFailure
 	}
 
@@ -58,39 +59,40 @@ func (cmd *UpCmd) Execute(
 		storage.DBConnectionString(&cfg.Connection),
 	)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to connect to database: %w", err))
 		return subcommands.ExitFailure
 	}
 	defer db.Close()
 
 	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationService := services.NewMigrationService(
 		migrationDBRepo,
 		migrationFsRepo,
+		*cfg,
 		consoleOutputter,
 	)
 
 	if cmd.version == "" {
 		err = migrationService.ApplyAllMigrations()
 		if err != nil {
-			consoleOutputter.Error(err.Error())
+			consoleOutputter.Error(fmt.Errorf("unable to apply all migrations: %w", err))
 			return subcommands.ExitFailure
 		}
 	} else {
 		err = migrationService.ApplyUpToVersion(cmd.version)
 		if err != nil {
-			consoleOutputter.Error(err.Error())
+			consoleOutputter.Error(fmt.Errorf("unable to apply migrations up to %s: %w", cmd.version, err))
 			return subcommands.ExitFailure
 		}
 	}

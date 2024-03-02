@@ -3,10 +3,9 @@ package commands
 import (
 	"context"
 	"flag"
-	"time"
+	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/output"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/bolt/internal/services"
@@ -50,30 +49,28 @@ func (cmd *NewCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to retrieve configuration: %w", err))
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(
+			fmt.Errorf("unable to setup local migrations directory: %w", err),
+		)
 		return subcommands.ExitFailure
 	}
 
 	migrationService := services.NewMigrationService(
 		nil,
 		migrationFsRepo,
+		*cfg,
 		consoleOutputter,
 	)
-	if err != nil {
-		consoleOutputter.Error(err.Error())
-		return subcommands.ExitFailure
-	}
 
-	migration := models.NewMigration(time.Now(), cmd.message)
-	err = migrationService.CreateMigration(migration)
+	_, err = migrationService.CreateMigration(cmd.message)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to create new migration: %w", err))
 		return subcommands.ExitFailure
 	}
 

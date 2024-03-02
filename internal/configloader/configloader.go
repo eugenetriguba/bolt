@@ -10,6 +10,7 @@ package configloader
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,8 +19,21 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-var errConfigFileNotFound = errors.New(
-	"bolt configuration file not found in current directory or any parent directories",
+type VersionStyle string
+
+const (
+	VersionStyleSequential VersionStyle = "sequential"
+	VersionStyleTimestamp  VersionStyle = "timestamp"
+)
+
+var (
+	ErrConfigFileNotFound = errors.New(
+		"bolt configuration file not found in current directory or any parent directories",
+	)
+	ErrInvalidVersionStyle = fmt.Errorf(
+		"invalid version style for bolt migrations. supported styles: %v",
+		[]VersionStyle{VersionStyleSequential, VersionStyleTimestamp},
+	)
 )
 
 // Config represents the application configuration settings.
@@ -35,7 +49,8 @@ type Config struct {
 }
 
 type MigrationsConfig struct {
-	DirectoryPath string `toml:"directory_path" envconfig:"BOLT_MIGRATIONS_DIR_PATH"`
+	DirectoryPath string       `toml:"directory_path" envconfig:"BOLT_MIGRATIONS_DIR_PATH"`
+	VersionStyle  VersionStyle `toml:"version_style"  envconfig:"BOLT_MIGRATIONS_VERSION_STYLE"`
 }
 
 type ConnectionConfig struct {
@@ -49,12 +64,17 @@ type ConnectionConfig struct {
 
 func NewConfig() (*Config, error) {
 	filePath, err := findConfigFilePath()
-	if err != nil && !errors.Is(err, errConfigFileNotFound) {
+	if err != nil && !errors.Is(err, ErrConfigFileNotFound) {
 		return nil, err
 	}
 
-	cfg := Config{Migrations: MigrationsConfig{DirectoryPath: "migrations"}}
-	if !errors.Is(err, errConfigFileNotFound) {
+	cfg := Config{
+		Migrations: MigrationsConfig{
+			DirectoryPath: "migrations",
+			VersionStyle:  VersionStyleTimestamp,
+		},
+	}
+	if !errors.Is(err, ErrConfigFileNotFound) {
 		_, err = toml.DecodeFile(filePath, &cfg)
 		if err != nil {
 			return nil, err
@@ -64,6 +84,11 @@ func NewConfig() (*Config, error) {
 	err = envconfig.Process("", &cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.Migrations.VersionStyle != VersionStyleSequential &&
+		cfg.Migrations.VersionStyle != VersionStyleTimestamp {
+		return nil, ErrInvalidVersionStyle
 	}
 
 	return &cfg, nil
@@ -91,7 +116,7 @@ func findConfigFilePath() (filePath string, err error) {
 		}
 
 		if dir == rootDir {
-			return "", errConfigFileNotFound
+			return "", ErrConfigFileNotFound
 		}
 
 		dir = filepath.Dir(dir)

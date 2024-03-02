@@ -1,33 +1,39 @@
 package models_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
-	"gotest.tools/v3/assert"
-
 	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/checkmate/check"
 )
 
-var timestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+func TestNewTimestampMigration(t *testing.T) {
+	var timestamp = time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 
-func TestNewMigrationInit(t *testing.T) {
-	m := models.NewMigration(timestamp, "test message")
+	m := models.NewTimestampMigration(timestamp, "test message")
 
-	assert.Equal(t, m.Version, "20200101000000")
-	assert.Equal(t, m.Message, "test message")
-	assert.Equal(t, m.Applied, false)
+	check.Equal(t, m.Version, "20200101000000")
+	check.Equal(t, m.Message, "test message")
+	check.Equal(t, m.Applied, false)
 }
 
-func TestAppliedNewMigration(t *testing.T) {
-	m := models.NewMigration(timestamp, "test_message")
+func TestNewSequentialMigration(t *testing.T) {
+	m := models.NewSequentialMigration(1, "test message")
 
-	assert.Equal(t, m.String(), "20200101000000 - test_message - [ ]")
-	m.Applied = true
-	assert.Equal(t, m.String(), "20200101000000 - test_message - [x]")
+	check.Equal(t, m.Version, "001")
+	check.Equal(t, m.Message, "test message")
+	check.Equal(t, m.Applied, false)
+
+	m = models.NewSequentialMigration(100, "test message")
+
+	check.Equal(t, m.Version, "100")
+	check.Equal(t, m.Message, "test message")
+	check.Equal(t, m.Applied, false)
 }
 
-func TestEmptyMessageMigration(t *testing.T) {
-	m := models.NewMigration(timestamp, "")
-	assert.Equal(t, "20200101000000 - [ ]", m.String())
+func TestName(t *testing.T) {
+	m := models.NewSequentialMigration(1, "test message")
+	check.Equal(t, m.Name(), fmt.Sprintf("%s_%s", m.Version, m.Message))
 }

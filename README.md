@@ -49,12 +49,17 @@ Bolt is a command-line tool designed to simplify and streamline your database mi
     - [`bolt up`](#bolt-up)
     - [`bolt down`](#bolt-down)
     - [`bolt status`](#bolt-status)
+    - [`bolt version`](#bolt-version)
   - [Script Execution Options](#script-execution-options)
+  - [Version Styles](#version-styles)
 - [Explanation](#explanation)
   - [How Are Migration Scripts Executed?](#how-are-migration-scripts-executed)
   - [How Does Bolt Know What Migrations Have Been Applied?](#how-does-bolt-know-what-migrations-have-been-applied)
   - [How Are Migrations Applied?](#how-are-migrations-applied)
   - [How Are Migrations Reverted?](#how-are-migrations-reverted)
+  - [What are Migration Version Styles?](#what-are-migration-version-styles)
+  - [Why can't I change between version styles?](#why-cant-i-change-between-version-styles)
+  - [How is the migration message used by Bolt?](#how-is-the-migration-message-used-by-bolt)
 
 ## Installation
 
@@ -244,7 +249,7 @@ At the moment, only PostgreSQL is supported. You're welcome to contribute suppor
 
 ### Configuration
 
-There are two ways to configure Bolt: via a `bolt.toml` file or via environment variables. If you use both methods, the environment variables will take precedence.
+There are two ways to configure Bolt: via a `bolt.toml` file or via environment variables. If you use both methods, the environment variables will always take precedence.
 
 #### Configuration File
 
@@ -258,6 +263,12 @@ or in any parent directory.
 # the current working directory. You may also use an absolute
 # path.
 directory_path = "migrations"
+# The migration versioning style you prefer. Supported options
+# are "timestamp" and "sequential". Defaults to "timestamp".
+#
+# Note: It is not supported to change migration version styles
+# i.e. you can't have a mix of sequential and timestamp migrations.
+version_style = "timestamp"
 
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
@@ -284,6 +295,7 @@ driver =
 All configuration file settings have corresponding environment variables.
 
 - `BOLT_MIGRATIONS_DIR_PATH`
+- `BOLT_MIGRATIONS_VERSION_STYLE`
 - `BOLT_DB_CONN_HOST`
 - `BOLT_DB_CONN_PORT`
 - `BOLT_DB_CONN_USER`
@@ -337,6 +349,14 @@ status:
 	List the database migrations and their statuses
 ```
 
+#### `bolt version`
+
+```bash
+$ bolt help version
+version:
+	Show the current version of Bolt
+```
+
 ### Script Execution Options
 
 Bolt provides a way for you to customize how your migration scripts are executed if you need something different than the default behavior.
@@ -344,6 +364,12 @@ Bolt provides a way for you to customize how your migration scripts are executed
 You can do this by adding a comment to the top of your migration script. The comment must be in the following format: `-- bolt: <option>`. The following options are available:
 
 - `no-transaction`: Execute the migration script without a transaction. By default, every migration script will be attempted to be executed within a transaction, however, some SQL commands cannot be executed within a transaction so you'll need to opt out of that behavior in those cases.
+
+### Version Styles
+
+The following version styles are supported:
+- Timestamp
+- Sequential
 
 ## Explanation
 
@@ -362,3 +388,21 @@ When you run `bolt up`, Bolt will look at your local migration scripts and compa
 ### How Are Migrations Reverted?
 
 When you run `bolt down`, Bolt will look at the `bolt_migrations` table and compare the versions to the versions of your local migration scripts. Any versions that are in the table but not in your local migration scripts will be reverted in order, starting with the newest migration. Reverting a migration entails executing the `downgrade.sql` script in a transaction and removing the migration's version from the `bolt_migrations` table.
+
+### What are Migration Version Styles?
+
+Whenever you create a migration, it'll be prefixed with a "version". This is what is used by Bolt to keep track of what order to apply or revert migrations. Version styles are different supported options for what this prefix will be.
+
+Bolt supports two different options for this:
+- Sequential versions
+- Timestamp versions
+
+Sequential versions are incrementing integers. When you create a migration, it'll be prefixed with a number like "001", "002", and so on. Timestamp versions use the current time on migration creation as the prefix.
+
+### Why can't I change between version styles?
+
+The main reason that switching back and forth between "sequential" and "timestamp" versions is not supported is because Bolt will no longer know how to properly sort your migrations in the right order (and therefore, apply or revert them in the right order). If you've been using sequential migrations, such as "001" and "002", and then move over to timestamp migrations, such as "20200101000000", Bolt won't know how to order these correctly when both exist. Furthermore, because the "version" is parsed and sorted according to the version style that is configured, the parsing will fail if a mix of version styles are used.
+
+### How is the migration message used by Bolt?
+
+All migrations are created on the local filesystem in the format `<version>_<message>`. Bolt uses the `<version>` part of the name for keeping track of the migrations and how they should be applied or reverted. The `<message>` part is purely informational so you know what that migration is for. Bolt does not use or store it anywhere. You may alter this message whenever you'd like as long as the format is kept consistent (`_` after the `<version>`). However, the version should not be directly manipulated.

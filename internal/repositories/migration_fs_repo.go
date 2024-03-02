@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,27 +23,44 @@ func (e *ErrIsNotDir) Error() string {
 	)
 }
 
-type MigrationFsRepo struct {
+type MigrationFsRepo interface {
+	Create(migration *models.Migration) error
+	List() (map[string]*models.Migration, error)
+	ReadUpgradeScript(migration *models.Migration) (string, error)
+	ReadDowngradeScript(migration *models.Migration) (string, error)
+}
+
+type migrationFsRepo struct {
 	migrationsDirPath string
 }
 
-func NewMigrationFsRepo(migrationsConfig *configloader.MigrationsConfig) (*MigrationFsRepo, error) {
+func NewMigrationFsRepo(
+	migrationsConfig *configloader.MigrationsConfig,
+) (MigrationFsRepo, error) {
 	fileInfo, err := os.Stat(migrationsConfig.DirectoryPath)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		err = os.MkdirAll(migrationsConfig.DirectoryPath, 0755)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"unable to create migration directory at %s: %w",
+				migrationsConfig.DirectoryPath,
+				err,
+			)
 		}
 	} else if err != nil {
-		return nil, err
-	} else if err == nil && !fileInfo.IsDir() {
+		return nil, fmt.Errorf(
+			"unable to check if migration directory at %s exists: %w",
+			migrationsConfig.DirectoryPath,
+			err,
+		)
+	} else if !fileInfo.IsDir() {
 		return nil, &ErrIsNotDir{path: migrationsConfig.DirectoryPath}
 	}
 
-	return &MigrationFsRepo{migrationsDirPath: migrationsConfig.DirectoryPath}, nil
+	return &migrationFsRepo{migrationsDirPath: migrationsConfig.DirectoryPath}, nil
 }
 
-func (mr *MigrationFsRepo) Create(migration *models.Migration) error {
+func (mr migrationFsRepo) Create(migration *models.Migration) error {
 	newMigrationDir := filepath.Join(mr.migrationsDirPath, mr.migrationDirname(migration))
 
 	err := os.Mkdir(newMigrationDir, 0755)
@@ -63,59 +81,41 @@ func (mr *MigrationFsRepo) Create(migration *models.Migration) error {
 	return nil
 }
 
-func (mr *MigrationFsRepo) Exists(version string) (bool, error) {
-	migrations, err := mr.List()
-	if err != nil {
-		return false, err
-	}
-
-	_, ok := migrations[version]
-	return ok, nil
-}
-
-func (mr *MigrationFsRepo) Get(version string) (*models.Migration, error) {
-	migrations, err := mr.List()
-	if err != nil {
-		return nil, err
-	}
-
-	migration, ok := migrations[version]
-	if !ok {
-		return nil, fmt.Errorf("migration %s does not exist", version)
-	}
-
-	return migration, nil
-}
-
-func (mr *MigrationFsRepo) List() (map[string]*models.Migration, error) {
+func (mr migrationFsRepo) List() (map[string]*models.Migration, error) {
 	entries, err := os.ReadDir(mr.migrationsDirPath)
 	if err != nil {
 		return nil, err
 	}
 
-	var migrations = make(map[string]*models.Migration)
+	var migrations = make(map[string]*models.Migration, 0)
 	for _, entry := range entries {
-		parts := strings.SplitN(entry.Name(), "_", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf(
-				"%s is an invalid migration name: expected a "+
-					"migration directory of the format <version>_<message>",
-				entry.Name(),
-			)
+		migration, err := dirEntryToMigration(entry)
+		if err != nil {
+			return nil, err
 		}
-		migrations[parts[0]] = &models.Migration{
-			Version: parts[0],
-			Message: parts[1],
-			Applied: false,
-		}
+		migrations[migration.Version] = migration
 	}
 
 	return migrations, nil
 }
 
-func (mr *MigrationFsRepo) ReadUpgradeScript(
-	migration *models.Migration,
-) (string, error) {
+func dirEntryToMigration(entry fs.DirEntry) (*models.Migration, error) {
+	parts := strings.SplitN(entry.Name(), "_", 2)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf(
+			"%s is an invalid migration name: expected a "+
+				"migration directory of the format <version>_<message>",
+			entry.Name(),
+		)
+	}
+	return &models.Migration{
+		Version: parts[0],
+		Message: parts[1],
+		Applied: false,
+	}, nil
+}
+
+func (mr migrationFsRepo) ReadUpgradeScript(migration *models.Migration) (string, error) {
 	upgradeScriptPath := filepath.Join(
 		mr.migrationsDirPath,
 		mr.migrationDirname(migration),
@@ -124,7 +124,7 @@ func (mr *MigrationFsRepo) ReadUpgradeScript(
 	return mr.readScriptContents(upgradeScriptPath)
 }
 
-func (mr *MigrationFsRepo) ReadDowngradeScript(
+func (mr migrationFsRepo) ReadDowngradeScript(
 	migration *models.Migration,
 ) (string, error) {
 	downgradeScriptPath := filepath.Join(
@@ -135,7 +135,7 @@ func (mr *MigrationFsRepo) ReadDowngradeScript(
 	return mr.readScriptContents(downgradeScriptPath)
 }
 
-func (mr *MigrationFsRepo) readScriptContents(scriptPath string) (string, error) {
+func (mr migrationFsRepo) readScriptContents(scriptPath string) (string, error) {
 	contents, err := os.ReadFile(scriptPath)
 	if err != nil {
 		return "", err
@@ -146,13 +146,13 @@ func (mr *MigrationFsRepo) readScriptContents(scriptPath string) (string, error)
 
 // migrationDirname creates the directory name that
 // should be used for this migration.
-func (mr *MigrationFsRepo) migrationDirname(migration *models.Migration) string {
+func (mr migrationFsRepo) migrationDirname(migration *models.Migration) string {
 	return fmt.Sprintf("%s_%s", migration.Version, mr.normalizeMessage(migration))
 }
 
 // normalizeMessage normalizes the Message of a migration
 // to be filesystem friendly.
-func (mr *MigrationFsRepo) normalizeMessage(migration *models.Migration) string {
+func (mr migrationFsRepo) normalizeMessage(migration *models.Migration) string {
 	message := strings.ToLower(migration.Message)
 	message = strings.TrimSpace(message)
 	message = strings.ReplaceAll(message, " ", "_")

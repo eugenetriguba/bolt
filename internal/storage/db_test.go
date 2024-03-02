@@ -7,29 +7,31 @@ import (
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/storage"
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate/assert"
 )
 
-func TestDBConnectWithPostgres(t *testing.T) {
+func TestDBConnect_Success(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "postgres")
 
 	conn, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	defer conn.Close()
 
 	_, err = conn.Exec("SELECT 1;")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 }
 
-func TestDBConnectMalformedConnectionString(t *testing.T) {
+func TestDBConnect_BadConnectionString(t *testing.T) {
 	_, err := storage.DBConnect("postgres", "pizza=123")
+	assert.ErrorIs(t, err, storage.ErrUnableToConnect)
 	assert.ErrorContains(t, err, "connection refused")
 }
 
-func TestDBConnectUnsupportedDriver(t *testing.T) {
+func TestDBConnect_UnsupportedDriver(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "redis")
 
 	_, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
+	assert.ErrorIs(t, err, storage.ErrMalformedConnectionString)
 	assert.ErrorContains(t, err, `unknown driver "redis"`)
 }
 

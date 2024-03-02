@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"flag"
+	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/output"
@@ -39,7 +40,7 @@ func (m *StatusCmd) Execute(
 
 	cfg, err := configloader.NewConfig()
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to retrieve configuration: %w", err))
 		return subcommands.ExitFailure
 	}
 
@@ -48,31 +49,33 @@ func (m *StatusCmd) Execute(
 		storage.DBConnectionString(&cfg.Connection),
 	)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to connect to database: %w", err))
 		return subcommands.ExitFailure
 	}
 	defer db.Close()
 
 	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
 
 	migrationService := services.NewMigrationService(
 		migrationDBRepo,
 		migrationFsRepo,
+		*cfg,
 		consoleOutputter,
 	)
+
 	migrations, err := migrationService.ListMigrations(services.SortOrderAsc)
 	if err != nil {
-		consoleOutputter.Error(err.Error())
+		consoleOutputter.Error(fmt.Errorf("unable to list migrations: %w", err))
 		return subcommands.ExitFailure
 	}
 
@@ -95,6 +98,13 @@ func (m *StatusCmd) Execute(
 		rows[i] = []string{migration.Version, migration.Message, applied}
 	}
 
-	consoleOutputter.Table(headers, rows)
+	err = consoleOutputter.Table(headers, rows)
+	if err != nil {
+		consoleOutputter.Error(
+			fmt.Errorf("unable to output migrations as table: %w", err),
+		)
+		return subcommands.ExitFailure
+	}
+
 	return subcommands.ExitSuccess
 }

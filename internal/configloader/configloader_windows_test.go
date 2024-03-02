@@ -1,4 +1,4 @@
-// go:build windows
+//go:build windows
 
 package configloader_test
 
@@ -9,23 +9,26 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate/assert"
 )
 
 func TestNewConfigWindowsSearchesToRootFilePath(t *testing.T) {
 	expectedCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{DirectoryPath: "differentmigrationsdir"},
+		Migrations: configloader.MigrationsConfig{
+			DirectoryPath: "differentmigrationsdir",
+			VersionStyle:  configloader.VersionStyleSequential,
+		},
 	}
 	configPath := filepath.Join(os.Getenv("SystemDrive"), "bolt.toml")
 	bolttest.CreateConfigFile(t, &expectedCfg, configPath)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	homedir, err := os.UserHomeDir()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 	bolttest.ChangeCwd(t, homedir)
 
 	cfg, err := configloader.NewConfig()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	assert.DeepEqual(t, *cfg, expectedCfg)
 }

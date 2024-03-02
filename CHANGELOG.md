@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Documentation on `bolt version` command.
+- Ability to use sequentially versioned or timestamp-based migration versions.
+- More detailed error messages to help understand when things go wrong.
+
+### Changed
+
+- Moved `cli.Run` from `pkg` to `internal`
+
+### Fixed
+
+- A handful of unhandled errors which were leading to some silent failures.
+- The migration version wasn't being parsed out and converted to its native type during sort. That is now being done, for either version style (sequential or timestamp).
+
 ## [0.2.1] - 2024-01-14
 
 ### Fixed

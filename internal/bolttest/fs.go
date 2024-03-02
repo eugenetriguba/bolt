@@ -6,7 +6,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	"gotest.tools/v3/assert"
+	"github.com/eugenetriguba/checkmate/assert"
 )
 
 func CreateConfigFile(t *testing.T, cfg *configloader.Config, filePath string) {
@@ -14,15 +14,15 @@ func CreateConfigFile(t *testing.T, cfg *configloader.Config, filePath string) {
 
 	encoder := toml.NewEncoder(f)
 	err := encoder.Encode(cfg)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	err = f.Close()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 }
 
 func CreateTempFile(t *testing.T, filePath string) *os.File {
 	f, err := os.Create(filePath)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	t.Cleanup(func() {
 		err = os.Remove(f.Name())
@@ -36,10 +36,10 @@ func CreateTempFile(t *testing.T, filePath string) *os.File {
 
 func ChangeCwd(t *testing.T, path string) {
 	dir, err := os.Getwd()
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	err = os.Chdir(path)
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	t.Cleanup(func() {
 		err = os.Chdir(dir)

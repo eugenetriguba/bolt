@@ -2,29 +2,40 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	_ "github.com/lib/pq"
 )
 
+var (
+	ErrMalformedConnectionString = errors.New(
+		"malformed database connection parameters provided",
+	)
+	ErrUnableToConnect = errors.New("unable to open connection to database")
+)
+
 // DBConnect establishes a connection to the database using the driver
-// and connection information.
+// and connection information. Only "postgres" is supported as the driver.
 //
-// Note that only "postgres" is supported as the driver right now.
+// The following errors may be returned:
+//   - ErrMalformedConnectionString: The provided connection parameters are
+//     not in a valid format.
+//   - ErrUnableToConnect: Unable to make a connection to the database with
+//     the provided connection parameters.
 func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
 	db, err := sql.Open(driver, connectionParams)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
 	}
 
-	// Note: `sql.Open` only validates the connection string we provided
-	// it is sane. It doesn't actually open up a connection to the database.
-	// For that, we ping the database to ensure the connection string is fully
-	// valid.
+	// Note: `sql.Open` only validates the connection string we provided is sane.
+	// It doesn't actually open up a connection to the database. For that, we ping
+	// the database to ensure the connection string is fully valid.
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrUnableToConnect, err)
 	}
 
 	return db, nil

@@ -7,3 +7,6 @@
 # Bolt CLI config/output
 /migrations
 /bolt.toml
+
+# Test output
+/cover.out

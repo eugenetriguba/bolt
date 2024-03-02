@@ -2,26 +2,29 @@ package sqlparse
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 )
 
-type SqlParser struct {
-	reader io.Reader
+type SqlParser interface {
+	Parse(reader io.Reader) (ExecutionOptions, error)
 }
 
 type ExecutionOptions struct {
 	UseTransaction bool
 }
 
-func NewSqlParser(reader io.Reader) *SqlParser {
-	return &SqlParser{reader: reader}
+type sqlParser struct{}
+
+func NewSqlParser() SqlParser {
+	return sqlParser{}
 }
 
-func (sp *SqlParser) Parse() (*ExecutionOptions, error) {
-	options := &ExecutionOptions{UseTransaction: true}
+func (sp sqlParser) Parse(reader io.Reader) (ExecutionOptions, error) {
+	options := ExecutionOptions{UseTransaction: true}
 
-	scanner := bufio.NewScanner(sp.reader)
+	scanner := bufio.NewScanner(reader)
 	if scanner.Scan() {
 		firstLine := strings.ToLower(strings.TrimSpace(scanner.Text()))
 		if strings.HasPrefix(firstLine, "-- bolt:") {
@@ -37,7 +40,7 @@ func (sp *SqlParser) Parse() (*ExecutionOptions, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return options, fmt.Errorf("parsing sql file encountered an error: %w", err)
 	}
 
 	return options, nil
