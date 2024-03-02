@@ -267,7 +267,7 @@ directory_path = "migrations"
 # are "timestamp" and "sequential". Defaults to "timestamp".
 #
 # Note: It is not supported to change migration version styles
-# once one is picked and migrations have been applied.
+# i.e. you can't have a mix of sequential and timestamp migrations.
 version_style = "timestamp"
 
 # Connection parameters for the database Bolt will be
