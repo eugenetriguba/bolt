@@ -1,7 +1,6 @@
 package services
 
 import (
-	"database/sql"
 	"fmt"
 	"sort"
 	"strconv"
@@ -34,29 +33,6 @@ func NewMigrationService(
 		cfg:       cfg,
 		outputter: outputter,
 	}
-}
-
-func NewMigrationServiceFromConfig(
-	db *sql.DB,
-	outputter output.Outputter,
-	cfg configloader.Config,
-) (MigrationService, error) {
-	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
-	if err != nil {
-		return MigrationService{}, err
-	}
-
-	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
-	if err != nil {
-		return MigrationService{}, err
-	}
-
-	return NewMigrationService(
-		migrationDBRepo,
-		migrationFsRepo,
-		cfg,
-		outputter,
-	), nil
 }
 
 type sortOrder int
@@ -259,7 +235,7 @@ func (ms MigrationService) RevertMigration(migration *models.Migration) error {
 	}
 
 	if execOptions.UseTransaction {
-		err = ms.dbRepo.ApplyWithTx(scriptContents, migration)
+		err = ms.dbRepo.RevertWithTx(scriptContents, migration)
 	} else {
 		err = ms.dbRepo.Revert(scriptContents, migration)
 	}

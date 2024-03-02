@@ -7,6 +7,7 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/output"
+	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/bolt/internal/services"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/google/subcommands"
@@ -63,15 +64,24 @@ func (cmd *DownCmd) Execute(
 	}
 	defer db.Close()
 
-	migrationService, err := services.NewMigrationServiceFromConfig(
-		db,
-		consoleOutputter,
-		*cfg,
-	)
+	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {
 		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
 	}
+
+	migrationFsRepo, err := repositories.NewMigrationFsRepo(&cfg.Migrations)
+	if err != nil {
+		consoleOutputter.Error(err)
+		return subcommands.ExitFailure
+	}
+
+	migrationService := services.NewMigrationService(
+		migrationDBRepo,
+		migrationFsRepo,
+		*cfg,
+		consoleOutputter,
+	)
 
 	if cmd.version == "" {
 		err = migrationService.RevertAllMigrations()
