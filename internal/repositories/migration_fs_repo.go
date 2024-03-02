@@ -25,8 +25,6 @@ func (e *ErrIsNotDir) Error() string {
 
 type MigrationFsRepo interface {
 	Create(migration *models.Migration) error
-	Exists(version string) (bool, error)
-	Get(version string) (*models.Migration, error)
 	List() (map[string]*models.Migration, error)
 	Latest() (*models.Migration, error)
 	ReadUpgradeScript(migration *models.Migration) (string, error)
@@ -41,14 +39,22 @@ func NewMigrationFsRepo(
 	migrationsConfig *configloader.MigrationsConfig,
 ) (MigrationFsRepo, error) {
 	fileInfo, err := os.Stat(migrationsConfig.DirectoryPath)
-	if errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		err = os.MkdirAll(migrationsConfig.DirectoryPath, 0755)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"unable to create migration directory at %s: %w",
+				migrationsConfig.DirectoryPath,
+				err,
+			)
 		}
 	} else if err != nil {
-		return nil, err
-	} else if err == nil && !fileInfo.IsDir() {
+		return nil, fmt.Errorf(
+			"unable to check if migration directory at %s exists: %w",
+			migrationsConfig.DirectoryPath,
+			err,
+		)
+	} else if !fileInfo.IsDir() {
 		return nil, &ErrIsNotDir{path: migrationsConfig.DirectoryPath}
 	}
 
@@ -76,31 +82,11 @@ func (mr migrationFsRepo) Create(migration *models.Migration) error {
 	return nil
 }
 
-func (mr migrationFsRepo) Exists(version string) (bool, error) {
-	migrations, err := mr.List()
-	if err != nil {
-		return false, err
-	}
-
-	_, ok := migrations[version]
-	return ok, nil
-}
-
-func (mr migrationFsRepo) Get(version string) (*models.Migration, error) {
-	migrations, err := mr.List()
-	if err != nil {
-		return nil, err
-	}
-
-	migration, ok := migrations[version]
-	if !ok {
-		return nil, fmt.Errorf("migration %s does not exist", version)
-	}
-
-	return migration, nil
-}
-
 func (mr migrationFsRepo) Latest() (*models.Migration, error) {
+	// TODO: ReadDir returns migrations sorted by filename.
+	// To be correct, it seems like we will need to sort these
+	// migrations by the version style that is configured and then
+	// grab the latest.
 	entries, err := os.ReadDir(mr.migrationsDirPath)
 	if err != nil {
 		return nil, err

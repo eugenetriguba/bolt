@@ -335,7 +335,10 @@ func (ms MigrationService) ListMigrations(order sortOrder) ([]*models.Migration,
 	return migrations, err
 }
 
-func (ms MigrationService) sortMigrations(migrations []*models.Migration, order sortOrder) error {
+func (ms MigrationService) sortMigrations(
+	migrations []*models.Migration,
+	order sortOrder,
+) error {
 	sortErrs := make([]error, 0)
 	sort.Slice(migrations, func(i, j int) bool {
 		var comparison bool
