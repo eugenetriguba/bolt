@@ -9,8 +9,15 @@ import (
 	"github.com/eugenetriguba/bolt/internal/models"
 )
 
-type SQLExecutor interface {
+type sqlExecutor interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+
+type SqlDb interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
+	Begin() (*sql.Tx, error)
 }
 
 type MigrationDBRepo interface {
@@ -23,14 +30,14 @@ type MigrationDBRepo interface {
 }
 
 type migrationDBRepo struct {
-	db *sql.DB
+	db SqlDb
 }
 
 // NewMigrationDBRepo initializes the MigrationDBRepo with a
 // database. Furthermore, it ensures the migration table it
 // operates on exists. If it is unable to create or confirm
 // the table exists, an error is returned.
-func NewMigrationDBRepo(db *sql.DB) (MigrationDBRepo, error) {
+func NewMigrationDBRepo(db SqlDb) (MigrationDBRepo, error) {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS bolt_migrations(
 			version CHARACTER(14) PRIMARY KEY NOT NULL
@@ -38,7 +45,7 @@ func NewMigrationDBRepo(db *sql.DB) (MigrationDBRepo, error) {
 	`)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"unable to create bolt_migrations database table: %w",
+			"unable to confirm bolt_migrations database table exists: %w",
 			err,
 		)
 	}
@@ -157,7 +164,7 @@ func (mr migrationDBRepo) ApplyWithTx(
 }
 
 func applyMigration(
-	executor SQLExecutor,
+	executor sqlExecutor,
 	upgradeScript string,
 	migration models.Migration,
 ) error {
@@ -229,7 +236,7 @@ func (mr migrationDBRepo) RevertWithTx(
 }
 
 func revertMigration(
-	executor SQLExecutor,
+	executor sqlExecutor,
 	downgradeScript string,
 	migration models.Migration,
 ) error {
