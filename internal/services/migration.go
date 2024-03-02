@@ -189,6 +189,8 @@ func (ms MigrationService) RevertDownToVersion(version string) error {
 		return fmt.Errorf("migration with version %s does not exist", version)
 	}
 	if !targetMigration.Applied {
+		// Assumption: Every migration from the latest down to the target
+		// migration hasn't been applied.
 		return fmt.Errorf(
 			"migration with version %s isn't applied, nothing to revert",
 			version,

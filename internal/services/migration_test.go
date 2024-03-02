@@ -795,3 +795,279 @@ func TestApplyUpToVersion_AppliesMigrations(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, migrationFsRepo.ReadUpgradeScriptCallCount, 2)
 }
+
+func TestRevertMigration_WithTransaction(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			ScriptContents: "DROP TABLE tmp;",
+			Err:            nil,
+		},
+	}
+
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{
+		RevertWithTxReturnValue: bolttest.RevertWithTxReturnValue{
+			Err: nil,
+		},
+	}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertMigration(&models.Migration{})
+
+	assert.Nil(t, err)
+	assert.Equal(t, migrationDbRepo.RevertWithTxCallCount, 1)
+	assert.Equal(t, migrationDbRepo.RevertCallCount, 0)
+}
+
+func TestRevertMigration_WithoutTransaction(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			ScriptContents: "-- bolt: no-transaction\nDROP TABLE tmp;",
+			Err:            nil,
+		},
+	}
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{
+		RevertReturnValue: bolttest.RevertReturnValue{
+			Err: nil,
+		},
+	}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertMigration(&models.Migration{})
+
+	assert.Nil(t, err)
+	assert.Equal(t, migrationDbRepo.RevertWithTxCallCount, 0)
+	assert.Equal(t, migrationDbRepo.RevertCallCount, 1)
+}
+
+func TestRevertMigration_ReadUpgradeScriptErr(t *testing.T) {
+	expectedErr := errors.New("error!")
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			ScriptContents: "",
+			Err:            expectedErr,
+		},
+	}
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertMigration(&models.Migration{})
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestRevertDownToVersion_ListMigrationsErr(t *testing.T) {
+	expectedErr := errors.New("error!")
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: nil,
+			Err:        expectedErr,
+		},
+	}
+	svc := NewMigrationService(
+		&bolttest.MockMigrationDBRepo{},
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertDownToVersion("001")
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestRevertDownToVersion_TargetMigrationNotFound(t *testing.T) {
+	migrations := map[string]*models.Migration{
+		"001": {Version: "001", Applied: true},
+	}
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: migrations,
+			Err:        nil,
+		},
+	}
+	svc := NewMigrationService(
+		&bolttest.MockMigrationDBRepo{},
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertDownToVersion("002")
+
+	assert.ErrorContains(t, err, "migration with version 002 does not exist")
+}
+
+func TestRevertDownToVersion_TargetMigrationNotApplied(t *testing.T) {
+	migrations := map[string]*models.Migration{
+		"001": {Version: "001", Applied: false},
+	}
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: migrations,
+			Err:        nil,
+		},
+	}
+	svc := NewMigrationService(
+		&bolttest.MockMigrationDBRepo{},
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertDownToVersion("001")
+
+	assert.ErrorContains(t, err, "migration with version 001 isn't applied")
+}
+
+func TestRevertDownToVersion_RevertMigrationErr(t *testing.T) {
+	migrations := map[string]*models.Migration{
+		"001": {Version: "001", Applied: true},
+	}
+	expectedErr := errors.New("error!")
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: migrations,
+			Err:        nil,
+		},
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			Err: expectedErr,
+		},
+	}
+	svc := NewMigrationService(
+		&bolttest.MockMigrationDBRepo{},
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertDownToVersion("001")
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestRevertDownToVersion_RevertsMigrations(t *testing.T) {
+	migrations := map[string]*models.Migration{
+		"001": {Version: "001", Applied: true},
+		"002": {Version: "002", Applied: true},
+		"003": {Version: "003", Applied: false},
+	}
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: migrations,
+			Err:        nil,
+		},
+	}
+	svc := NewMigrationService(
+		&bolttest.MockMigrationDBRepo{},
+		migrationFsRepo,
+		configloader.Config{
+			Migrations: configloader.MigrationsConfig{
+				VersionStyle: configloader.VersionStyleSequential,
+			},
+		},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertDownToVersion("001")
+
+	assert.Nil(t, err)
+	assert.Equal(t, migrationFsRepo.ReadDowngradeScriptCallCount, 2)
+}
+
+func TestRevertAllMigrations_ListMigrationsErr(t *testing.T) {
+	expectedErr := errors.New("error!")
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: nil,
+			Err:        expectedErr,
+		},
+	}
+	svc := NewMigrationService(
+		&bolttest.MockMigrationDBRepo{},
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertAllMigrations()
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestRevertAllMigrations_RevertsNothingIfNoneApplied(t *testing.T) {
+	migrations := map[string]*models.Migration{
+		"001": {Version: "001", Applied: false},
+		"002": {Version: "002", Applied: false},
+	}
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: migrations,
+			Err:        nil,
+		},
+	}
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{
+			Migrations: configloader.MigrationsConfig{
+				VersionStyle: configloader.VersionStyleSequential,
+			},
+		},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertAllMigrations()
+
+	assert.Nil(t, err)
+	assert.Equal(t, migrationDbRepo.RevertCallCount, 0)
+	assert.Equal(t, migrationDbRepo.RevertWithTxCallCount, 0)
+}
+
+func TestRevertAllMigrations_RevertMigrationErr(t *testing.T) {
+	migrations := map[string]*models.Migration{
+		"001": {Version: "001", Applied: true},
+	}
+	expectedErr := errors.New("error!")
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: migrations,
+			Err:        nil,
+		},
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			Err: expectedErr,
+		},
+	}
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{
+			Migrations: configloader.MigrationsConfig{
+				VersionStyle: configloader.VersionStyleSequential,
+			},
+		},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertAllMigrations()
+
+	assert.ErrorIs(t, err, expectedErr)
+	assert.Equal(t, migrationDbRepo.RevertCallCount, 0)
+	assert.Equal(t, migrationDbRepo.RevertWithTxCallCount, 0)
+}
