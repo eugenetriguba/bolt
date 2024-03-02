@@ -397,7 +397,7 @@ Bolt supports two different options for this:
 - Sequential versions
 - Timestamp versions
 
-Sequential versions are incrementing integers. When you create a migration, it'll be prefixed with a number like "001", "002", and so on. Timestamp versions
+Sequential versions are incrementing integers. When you create a migration, it'll be prefixed with a number like "001", "002", and so on. Timestamp versions use the current time on migration creation as the prefix.
 
 ### Why can't I change between version styles?
 
