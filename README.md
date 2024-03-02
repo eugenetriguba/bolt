@@ -261,6 +261,12 @@ or in any parent directory.
 # the current working directory. You may also use an absolute
 # path.
 directory_path = "migrations"
+# The migration versioning style you prefer. Supported options
+# are "timestamp" and "sequential". Defaults to "timestamp".
+#
+# Note: It is not supported to change migration version styles
+# once one is picked and migrations have been applied.
+version_style = "timestamp"
 
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
