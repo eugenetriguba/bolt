@@ -440,7 +440,7 @@ func TestCreateMigration_CreateErr(t *testing.T) {
 func TestCreateMigration_LatestErr(t *testing.T) {
 	expectedErr := errors.New("error!")
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
-		LatestReturnValue: bolttest.LatestReturnValue{
+		ListReturnValue: bolttest.ListReturnValue{
 			Err: expectedErr,
 		},
 	}
@@ -464,9 +464,11 @@ func TestCreateMigration_LatestErr(t *testing.T) {
 
 func TestCreateMigration_SequentialVersionIncrements(t *testing.T) {
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
-		LatestReturnValue: bolttest.LatestReturnValue{
-			Migration: &models.Migration{Version: "001"},
-			Err:       nil,
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: map[string]*models.Migration{
+				"001": {Version: "001"},
+			},
+			Err: nil,
 		},
 		CreateReturnValue: bolttest.CreateReturnValue{
 			Err: nil,
@@ -490,11 +492,45 @@ func TestCreateMigration_SequentialVersionIncrements(t *testing.T) {
 	assert.Equal(t, migration.Version, "002")
 }
 
+func TestCreateMigration_SequentialVersionIncrementsLatestVersion(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: map[string]*models.Migration{
+				"001": {Version: "001"},
+				"002": {Version: "002"},
+				"003": {Version: "003"},
+			},
+			Err: nil,
+		},
+		CreateReturnValue: bolttest.CreateReturnValue{
+			Err: nil,
+		},
+	}
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{
+			Migrations: configloader.MigrationsConfig{
+				VersionStyle: configloader.VersionStyleSequential,
+			},
+		},
+		bolttest.NullOutputter{},
+	)
+
+	migration, err := svc.CreateMigration("new migration")
+
+	assert.Nil(t, err)
+	assert.Equal(t, migration.Version, "004")
+}
+
 func TestCreateMigration_SequentialVersionIncrementsParsingErr(t *testing.T) {
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
-		LatestReturnValue: bolttest.LatestReturnValue{
-			Migration: &models.Migration{Version: "abc"},
-			Err:       nil,
+		ListReturnValue: bolttest.ListReturnValue{
+			Migrations: map[string]*models.Migration{
+				"abc": {Version: "abc"},
+			},
+			Err: nil,
 		},
 		CreateReturnValue: bolttest.CreateReturnValue{
 			Err: nil,

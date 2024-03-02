@@ -26,7 +26,6 @@ func (e *ErrIsNotDir) Error() string {
 type MigrationFsRepo interface {
 	Create(migration *models.Migration) error
 	List() (map[string]*models.Migration, error)
-	Latest() (*models.Migration, error)
 	ReadUpgradeScript(migration *models.Migration) (string, error)
 	ReadDowngradeScript(migration *models.Migration) (string, error)
 }
@@ -80,23 +79,6 @@ func (mr migrationFsRepo) Create(migration *models.Migration) error {
 	}
 
 	return nil
-}
-
-func (mr migrationFsRepo) Latest() (*models.Migration, error) {
-	// TODO: ReadDir returns migrations sorted by filename.
-	// To be correct, it seems like we will need to sort these
-	// migrations by the version style that is configured and then
-	// grab the latest.
-	entries, err := os.ReadDir(mr.migrationsDirPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(entries) > 0 {
-		return dirEntryToMigration(entries[len(entries)-1])
-	}
-
-	return nil, nil
 }
 
 func (mr migrationFsRepo) List() (map[string]*models.Migration, error) {

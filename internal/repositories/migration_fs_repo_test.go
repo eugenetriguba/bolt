@@ -208,29 +208,3 @@ func TestList_InvalidMigrationName(t *testing.T) {
 		"expected a migration directory of the format <version>_<message>",
 	)
 }
-
-func TestLatest_DirDoesNotExist(t *testing.T) {
-	migrationsDir := filepath.Join(t.TempDir(), "migrations")
-	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
-	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
-	assert.Nil(t, err)
-	err = os.RemoveAll(migrationsDir)
-	assert.Nil(t, err)
-
-	_, err = repo.Latest()
-
-	assert.NotNil(t, err)
-	assert.ErrorContains(t, err, "no such file or directory")
-}
-
-func TestLatest_NoMigrations(t *testing.T) {
-	migrationsDir := filepath.Join(t.TempDir(), "migrations")
-	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
-	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
-	assert.Nil(t, err)
-
-	latestMigration, err := repo.Latest()
-
-	assert.Nil(t, err)
-	assert.Nil(t, latestMigration)
-}

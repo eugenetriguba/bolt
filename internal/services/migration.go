@@ -283,12 +283,13 @@ func (ms MigrationService) CreateMigration(message string) (*models.Migration, e
 func (ms MigrationService) getCurrentSequentialMigrationVersion() (uint64, error) {
 	var currentVersion uint64 = 0
 
-	latestMigration, err := ms.fsRepo.Latest()
+	migrations, err := ms.ListMigrations(SortOrderDesc)
 	if err != nil {
 		return 0, err
 	}
 
-	if latestMigration != nil {
+	if len(migrations) > 0 {
+		latestMigration := migrations[0]
 		currentVersion, err = strconv.ParseUint(latestMigration.Version, 10, 64)
 		if err != nil {
 			return 0, err

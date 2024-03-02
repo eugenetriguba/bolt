@@ -7,8 +7,6 @@ type MockMigrationFsRepo struct {
 	CreateCallCount                int
 	ListReturnValue                ListReturnValue
 	ListCallCount                  int
-	LatestReturnValue              LatestReturnValue
-	LatestCallCount                int
 	ReadUpgradeScriptReturnValue   ReadUpgradeScriptReturnValue
 	ReadUpgradeScriptCallCount     int
 	ReadDowngradeScriptReturnValue ReadDowngradeScriptReturnValue
@@ -17,11 +15,6 @@ type MockMigrationFsRepo struct {
 
 type CreateReturnValue struct {
 	Err error
-}
-
-type LatestReturnValue struct {
-	Migration *models.Migration
-	Err       error
 }
 
 type ReadUpgradeScriptReturnValue struct {
@@ -39,11 +32,6 @@ func (repo *MockMigrationFsRepo) Create(migration *models.Migration) error {
 func (repo *MockMigrationFsRepo) List() (map[string]*models.Migration, error) {
 	repo.ListCallCount += 1
 	return repo.ListReturnValue.Migrations, repo.ListReturnValue.Err
-}
-
-func (repo *MockMigrationFsRepo) Latest() (*models.Migration, error) {
-	repo.LatestCallCount += 1
-	return repo.LatestReturnValue.Migration, repo.LatestReturnValue.Err
 }
 
 func (repo *MockMigrationFsRepo) ReadUpgradeScript(
