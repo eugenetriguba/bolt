@@ -401,7 +401,7 @@ Sequential versions are incrementing integers. When you create a migration, it'l
 
 ### Why can't I change between version styles?
 
-The main reason that switching back and forth between "sequential" and "timestamp" versions is not supported is because Bolt will no longer know how to properly sort your migrations in the right order (and therefore, apply or revert them in the right order). If you've been using sequential migrations, such as "001" and "002", and then move over to timestamp migrations, such as "20200101000000", Bolt won't know how to order these. Furthermore, because the "version" is parsed and sorted according to the version style that is configured, that parsing will fail if a mix of version styles are used.
+The main reason that switching back and forth between "sequential" and "timestamp" versions is not supported is because Bolt will no longer know how to properly sort your migrations in the right order (and therefore, apply or revert them in the right order). If you've been using sequential migrations, such as "001" and "002", and then move over to timestamp migrations, such as "20200101000000", Bolt won't know how to order these correctly when both exist. Furthermore, because the "version" is parsed and sorted according to the version style that is configured, the parsing will fail if a mix of version styles are used.
 
 ### How is the migration message used by Bolt?
 
