@@ -24,15 +24,14 @@ func TestDBConnect_Success(t *testing.T) {
 func TestDBConnect_BadConnectionString(t *testing.T) {
 	_, err := storage.DBConnect("postgres", "pizza=123")
 	assert.ErrorIs(t, err, storage.ErrUnableToConnect)
-	assert.ErrorContains(t, err, "connection refused")
+	assert.ErrorContains(t, err, "unable to open connection to database")
 }
 
 func TestDBConnect_UnsupportedDriver(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "redis")
 
 	_, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
-	assert.ErrorIs(t, err, storage.ErrMalformedConnectionString)
-	assert.ErrorContains(t, err, `unknown driver "redis"`)
+	assert.ErrorIs(t, err, storage.ErrUnsupportedDriver)
 }
 
 func TestDBConnectionString(t *testing.T) {

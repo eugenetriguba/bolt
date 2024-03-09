@@ -4,16 +4,20 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
+
+var supportedDrivers = []string{"postgres"}
 
 var (
 	ErrMalformedConnectionString = errors.New(
 		"malformed database connection parameters provided",
 	)
-	ErrUnableToConnect = errors.New("unable to open connection to database")
+	ErrUnableToConnect   = errors.New("unable to open connection to database")
+	ErrUnsupportedDriver = fmt.Errorf("unsupported driver, supported drivers are %s", supportedDrivers)
 )
 
 // DBConnect establishes a connection to the database using the driver
@@ -24,8 +28,13 @@ var (
 //     not in a valid format.
 //   - ErrUnableToConnect: Unable to make a connection to the database with
 //     the provided connection parameters.
+//   - ErrUnsupportedDriver: The provided driver is not supported.
 func DBConnect(driver string, connectionParams string) (*sql.DB, error) {
-	db, err := sql.Open(driver, connectionParams)
+	if !slices.Contains(supportedDrivers, driver) {
+		return nil, ErrUnsupportedDriver
+	}
+
+	db, err := sql.Open("pgx", connectionParams)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
 	}
