@@ -36,7 +36,7 @@ func NewMigrationDBRepo(db storage.DB) (MigrationDBRepo, error) {
 	`)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"unable to confirm bolt_migrations database table exists: %w",
+			"unable to create or confirm bolt_migrations database table exists: %w",
 			err,
 		)
 	}

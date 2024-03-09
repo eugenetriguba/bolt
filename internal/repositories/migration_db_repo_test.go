@@ -46,19 +46,6 @@ func TestNewMigrationDBRepo_TableAlreadyExists(t *testing.T) {
 	assert.Equal(t, scanResult, 1)
 }
 
-// func TestNewMigrationDBRepo_TableCreationErr(t *testing.T) {
-// 	expectedErr := errors.New("error!")
-// 	db := bolttest.MockSqlDb{
-// 		ExecReturnValue: bolttest.ExecReturnValue{
-// 			Err: expectedErr,
-// 		},
-// 	}
-
-// 	_, err := repositories.NewMigrationDBRepo(&db)
-
-// 	assert.ErrorIs(t, err, expectedErr)
-// }
-
 func TestList_EmptyTable(t *testing.T) {
 	db := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo(db)
@@ -68,21 +55,6 @@ func TestList_EmptyTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, len(migrations), 0)
 }
-
-// func TestList_QueryErr(t *testing.T) {
-// 	expectedErr := errors.New("error!")
-// 	db := bolttest.MockSqlDb{
-// 		QueryReturnValue: bolttest.QueryReturnValue{
-// 			Err: expectedErr,
-// 		},
-// 	}
-// 	repo, err := repositories.NewMigrationDBRepo(&db)
-// 	assert.Nil(t, err)
-
-// 	_, err = repo.List()
-
-// 	assert.ErrorIs(t, err, expectedErr)
-// }
 
 func TestList_SingleResult(t *testing.T) {
 	db := bolttest.NewTestDB(t)
@@ -180,22 +152,6 @@ func TestApply_MalformedSql(t *testing.T) {
 	assert.Equal(t, migration.Applied, false)
 }
 
-// func TestApplyWithTx_BeginErr(t *testing.T) {
-// 	expectedErr := errors.New("error!")
-// 	db := bolttest.MockSqlDb{
-// 		BeginReturnValue: bolttest.BeginReturnValue{
-// 			Err: expectedErr,
-// 		},
-// 	}
-// 	repo, err := repositories.NewMigrationDBRepo(&db)
-// 	assert.Nil(t, err)
-// 	migration := models.NewTimestampMigration(time.Now(), "test")
-
-// 	err = repo.ApplyWithTx("SELECT 1 FROM bolt_migrations;", migration)
-
-// 	assert.ErrorIs(t, err, expectedErr)
-// }
-
 func TestApplyWithTx_ExecErr(t *testing.T) {
 	db := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo(db)
@@ -267,22 +223,6 @@ func TestRevert_MalformedSql(t *testing.T) {
 	assert.ErrorContains(t, err, "unable to execute downgrade script")
 	assert.Equal(t, migration.Applied, true)
 }
-
-// func TestRevertWithTx_BeginErr(t *testing.T) {
-// 	expectedErr := errors.New("error!")
-// 	db := bolttest.MockSqlDb{
-// 		BeginReturnValue: bolttest.BeginReturnValue{
-// 			Err: expectedErr,
-// 		},
-// 	}
-// 	repo, err := repositories.NewMigrationDBRepo(&db)
-// 	assert.Nil(t, err)
-// 	migration := models.NewTimestampMigration(time.Now(), "test")
-
-// 	err = repo.RevertWithTx("DROP TABLE bolt_migrations;", migration)
-
-// 	assert.ErrorIs(t, err, expectedErr)
-// }
 
 func TestRevertWithTx_ExecErr(t *testing.T) {
 	db := bolttest.NewTestDB(t)
