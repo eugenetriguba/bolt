@@ -17,7 +17,7 @@
 Bolt is a command-line tool designed to simplify and streamline your database migration process.
 
 🌟 Key Features:
-- **SQL-Powered Flexibility**: 🧩 - Write your migration scripts in plain SQL. This gives you the full power and familiarity of SQL, ensuring that you're not limited by the constraints of a specific DSL (Domain Specific Language).
+- **SQL-Powered Flexibility**: 🧩 - Write your migration scripts in plain SQL. This gives you the full power and familiarity of SQL.
 
 - **Bidirectional Migrations**: 🔀 - With support for both 'up' (migrating) and 'down' (downgrading) migrations, Bolt provides complete control over your database versions.
 
@@ -151,7 +151,6 @@ $ touch bolt.toml
 ```toml
 [connection]
 host = "localhost"
-port = 5432
 user = "bolt_user"
 password = "bolt_password"
 dbname = "bolt_tutorial_db"
@@ -245,7 +244,8 @@ In your `upgrade.sql` or `downgrade.sql`, add the following line as the first li
 
 ### Database Compatibility
 
-At the moment, only PostgreSQL is supported. You're welcome to contribute support for other databases.
+- PostgreSQL
+- MySQL
 
 ### Configuration
 
@@ -275,10 +275,10 @@ version_style = "timestamp"
 # required.
 [connection]
 # The host to use to connect to your database.
+# If you need to use a particular port, use <host>:<port>.
+# For example: localhost:5432. Otherwise, whatever port is
+# the default for the database driver will be used.
 host = 
-# The port to use to connect to your database.
-# Note: This should be an integer.
-port = 
 # The user to use to connect to your database.
 user = 
 # The password to use to connect to your database.
@@ -286,7 +286,7 @@ password =
 # The name of the database within your DBMS.
 dbname = 
 # The name of the database driver to use to connect to
-# the database. At the moment, only "postgres" is supported.
+# the database. Either "postgresql" or "mysql".
 driver = 
 ```
 
@@ -297,7 +297,6 @@ All configuration file settings have corresponding environment variables.
 - `BOLT_MIGRATIONS_DIR_PATH`
 - `BOLT_MIGRATIONS_VERSION_STYLE`
 - `BOLT_DB_CONN_HOST`
-- `BOLT_DB_CONN_PORT`
 - `BOLT_DB_CONN_USER`
 - `BOLT_DB_CONN_PASSWORD`
 - `BOLT_DB_CONN_DBNAME`
