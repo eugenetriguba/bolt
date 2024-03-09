@@ -12,13 +12,13 @@ jobs:
     strategy:
       matrix:
         db:
-          - {name: postgres, version: 16}
+          - {name: postgres}
           # - {name: mysql, version: 8}
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v3
     - name: Start Database
       run: |
-        docker run --detach --env-file ".env.${{ matrix.db.name }}" "${{ matrix.db.name }}:${{ matrix.db.version }}"
+        env $(cat ".env.${{ matrix.db.name }}" | xargs) docker compose -f "docker-compose.${{ matrix.db.name }}.yml" up -d
     - name: Run Tests
       run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -cover ./...
