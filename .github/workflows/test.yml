@@ -2,17 +2,23 @@ name: Test
 
 on:
   push:
-    branches: ["main"]
+    branches: ["dev"]
   pull_request:
-    branches: ["main"]
+    branches: ["dev"]
 
 jobs:
   run-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        db:
+          - {name: postgres, version: 16}
+          # - {name: mysql, version: 8}
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v3
-    - name: Setup Docker Compose Stack
-      run: docker compose up --detach
+    - name: Start Database
+      run: |
+        docker run --detach --env-file ".env.${{ matrix.db.name }}" "${{ matrix.db.name }}:${{ matrix.db.version }}"
     - name: Run Tests
-      run: docker exec bolt go test -cover ./...
+      run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -cover ./...
