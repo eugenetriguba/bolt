@@ -3,6 +3,7 @@ package configloader_test
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
@@ -35,6 +36,14 @@ func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_HOST")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PORT")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_USER")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PASSWORD")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DBNAME")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
+	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
 	expectedCfg := configloader.Config{
 		Migrations: configloader.MigrationsConfig{
 			DirectoryPath: "myfancymigrations",
@@ -49,9 +58,12 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 			Driver:   "postgres",
 		},
 	}
-	bolttest.CreateConfigFile(t, &expectedCfg, "bolt.toml")
+	tmpdir := t.TempDir()
+	bolttest.ChangeCwd(t, tmpdir)
+	bolttest.CreateConfigFile(t, &expectedCfg, filepath.Join(tmpdir, "bolt.toml"))
 
 	cfg, err := configloader.NewConfig()
+
 	assert.Nil(t, err)
 	assert.DeepEqual(t, *cfg, expectedCfg)
 }
@@ -99,4 +111,32 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	cfg, err := configloader.NewConfig()
 	assert.Nil(t, err)
 	assert.DeepEqual(t, *cfg, envCfg)
+}
+
+func TestNewConfigSearchesParentDirectories(t *testing.T) {
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_HOST")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PORT")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_USER")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PASSWORD")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DBNAME")
+	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
+	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
+	expectedCfg := configloader.Config{
+		Migrations: configloader.MigrationsConfig{
+			DirectoryPath: "differentmigrationsdir",
+			VersionStyle:  configloader.VersionStyleSequential,
+		},
+	}
+	tmpdir := t.TempDir()
+	bolttest.CreateConfigFile(t, &expectedCfg, filepath.Join(tmpdir, "bolt.toml"))
+	nestedTmpDir := filepath.Join(tmpdir, "nested-dir", "nested-x2-dir")
+	err := os.MkdirAll(nestedTmpDir, 0755)
+	assert.Nil(t, err)
+	bolttest.ChangeCwd(t, nestedTmpDir)
+
+	cfg, err := configloader.NewConfig()
+	assert.Nil(t, err)
+
+	assert.DeepEqual(t, *cfg, expectedCfg)
 }

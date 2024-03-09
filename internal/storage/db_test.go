@@ -12,8 +12,9 @@ import (
 
 func TestDBConnect_Success(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig(t, "postgres")
+	connParams := storage.DBConnectionString(cfg)
 
-	conn, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
+	conn, err := storage.DBConnect(cfg.Driver, connParams)
 	assert.Nil(t, err)
 	defer conn.Close()
 

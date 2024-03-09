@@ -12,16 +12,16 @@ import (
 )
 
 func NewTestConnectionConfig(t *testing.T, driver string) *configloader.ConnectionConfig {
-	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
+	port, err := strconv.Atoi(os.Getenv("BOLT_DB_CONN_PORT"))
 	assert.Nil(t, err)
 
 	return &configloader.ConnectionConfig{
 		Driver:   driver,
-		DBName:   os.Getenv("DB_NAME"),
-		Host:     os.Getenv("DB_HOST"),
+		DBName:   os.Getenv("BOLT_DB_CONN_DBNAME"),
+		Host:     os.Getenv("BOLT_DB_CONN_HOST"),
 		Port:     port,
-		User:     os.Getenv("DB_USERNAME"),
-		Password: os.Getenv("DB_PASSWORD"),
+		User:     os.Getenv("BOLT_DB_CONN_USER"),
+		Password: os.Getenv("BOLT_DB_CONN_PASSWORD"),
 	}
 }
 

@@ -373,12 +373,12 @@ func TestCreateMigration_VersionStyleTimestamp(t *testing.T) {
 		bolttest.NullOutputter{},
 	)
 
-	beforeCreateTs := time.Now().Add(-time.Second)
+	beforeCreateTs := time.Now().Add(30 * -time.Second)
 	migration, err := svc.CreateMigration("new migration")
-	afterCreateTs := time.Now().Add(time.Second)
+	afterCreateTs := time.Now().Add(30 * time.Second)
 
 	assert.Nil(t, err)
-	version, err := time.Parse("20060102150405", migration.Version)
+	version, err := time.ParseInLocation("20060102150405", migration.Version, time.Local)
 	assert.Nil(t, err)
 	check.True(t, beforeCreateTs.Before(version))
 	check.True(t, afterCreateTs.After(version))
