@@ -5,7 +5,7 @@ services:
     image: mysql:8.3
     container_name: bolt_mysql_db
     ports:
-      - "${BOLT_DB_CONN_PORT:?err}:3306"
+      - "${DB_PORT:?err}:3306"
     environment:
       - MYSQL_DATABASE=${BOLT_DB_CONN_DBNAME:?err}
       - MYSQL_USER=${BOLT_DB_CONN_USER:?err}

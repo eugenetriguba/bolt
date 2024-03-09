@@ -5,7 +5,7 @@ services:
     image: postgres:16.1-alpine3.19
     container_name: bolt_postgres_db
     ports:
-      - "${BOLT_DB_CONN_PORT:?err}:5432"
+      - "${DB_PORT:?err}:5432"
     environment:
       - POSTGRES_DB=${BOLT_DB_CONN_DBNAME:?err}
       - POSTGRES_USER=${BOLT_DB_CONN_USER:?err}
