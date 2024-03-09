@@ -1,2 +1,0 @@
-#!/bin/sh
-env $(cat .env.postgres | xargs) go run ./cmd/bolt/bolt.go $@

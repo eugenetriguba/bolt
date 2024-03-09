@@ -1,7 +1,6 @@
 package configloader_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,7 +36,6 @@ func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_HOST")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PORT")
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_USER")
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PASSWORD")
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DBNAME")
@@ -51,11 +49,10 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 		},
 		Connection: configloader.ConnectionConfig{
 			Host:     "testhost",
-			Port:     1234,
 			User:     "testuser",
 			Password: "testpassword",
 			DBName:   "testdb",
-			Driver:   "postgres",
+			Driver:   "postgresql",
 		},
 	}
 	tmpdir := t.TempDir()
@@ -76,7 +73,6 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 		},
 		Connection: configloader.ConnectionConfig{
 			Host:     "testhost",
-			Port:     1234,
 			User:     "testuser",
 			Password: "testpassword",
 			DBName:   "testdb",
@@ -92,17 +88,15 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 		},
 		Connection: configloader.ConnectionConfig{
 			Host:     "envtesthost",
-			Port:     4321,
 			User:     "envtestuser",
 			Password: "envtestpassword",
 			DBName:   "envtestdb",
-			Driver:   "postgres",
+			Driver:   "postgresql",
 		},
 	}
 	t.Setenv("BOLT_MIGRATIONS_VERSION_STYLE", string(envCfg.Migrations.VersionStyle))
 	t.Setenv("BOLT_MIGRATIONS_DIR_PATH", envCfg.Migrations.DirectoryPath)
 	t.Setenv("BOLT_DB_CONN_HOST", envCfg.Connection.Host)
-	t.Setenv("BOLT_DB_CONN_PORT", fmt.Sprintf("%d", envCfg.Connection.Port))
 	t.Setenv("BOLT_DB_CONN_USER", envCfg.Connection.User)
 	t.Setenv("BOLT_DB_CONN_PASSWORD", envCfg.Connection.Password)
 	t.Setenv("BOLT_DB_CONN_DBNAME", envCfg.Connection.DBName)
@@ -115,7 +109,6 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 
 func TestNewConfigSearchesParentDirectories(t *testing.T) {
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_HOST")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PORT")
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_USER")
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PASSWORD")
 	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DBNAME")

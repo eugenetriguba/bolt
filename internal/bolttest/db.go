@@ -1,9 +1,8 @@
 package bolttest
 
 import (
-	"database/sql"
+	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
@@ -11,39 +10,28 @@ import (
 	"github.com/eugenetriguba/checkmate/assert"
 )
 
-func NewTestConnectionConfig(t *testing.T, driver string) *configloader.ConnectionConfig {
-	port, err := strconv.Atoi(os.Getenv("BOLT_DB_CONN_PORT"))
+func NewTestDB(t *testing.T) storage.DB {
+	connectionConfig := NewTestConnectionConfig()
+	testdb, err := storage.DBConnect(connectionConfig)
 	assert.Nil(t, err)
+	t.Cleanup(func() {
+		DropTable(t, testdb, "bolt_migrations")
+		assert.Nil(t, testdb.Session.Close())
+	})
+	return testdb
+}
 
-	return &configloader.ConnectionConfig{
-		Driver:   driver,
+func NewTestConnectionConfig() configloader.ConnectionConfig {
+	return configloader.ConnectionConfig{
+		Driver:   os.Getenv("BOLT_DB_CONN_DRIVER"),
 		DBName:   os.Getenv("BOLT_DB_CONN_DBNAME"),
 		Host:     os.Getenv("BOLT_DB_CONN_HOST"),
-		Port:     port,
 		User:     os.Getenv("BOLT_DB_CONN_USER"),
 		Password: os.Getenv("BOLT_DB_CONN_PASSWORD"),
 	}
 }
 
-func NewTestDB(t *testing.T, driver string) *sql.DB {
-	connectionConfig := NewTestConnectionConfig(t, driver)
-	connInfo := storage.DBConnectionString(connectionConfig)
-	db, err := storage.DBConnect(driver, connInfo)
+func DropTable(t *testing.T, testdb storage.DB, tableName string) {
+	_, err := testdb.Session.SQL().Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s;`, tableName))
 	assert.Nil(t, err)
-	t.Cleanup(func() {
-		_, err = db.Exec(`
-			DO $$ DECLARE rec RECORD;
-			BEGIN FOR rec IN (
-				SELECT table_name 
-				FROM information_schema.tables 
-				WHERE table_schema = 'public'
-			) LOOP EXECUTE 'DROP TABLE IF EXISTS ' || rec.table_name || ' CASCADE';
-			END LOOP;
-			END $$;
-		`)
-		assert.Nil(t, err)
-		err = db.Close()
-		assert.Nil(t, err)
-	})
-	return db
 }

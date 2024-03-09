@@ -55,7 +55,6 @@ type MigrationsConfig struct {
 
 type ConnectionConfig struct {
 	Host     string `toml:"host"     envconfig:"BOLT_DB_CONN_HOST"`
-	Port     int    `toml:"port"     envconfig:"BOLT_DB_CONN_PORT"`
 	User     string `toml:"user"     envconfig:"BOLT_DB_CONN_USER"`
 	Password string `toml:"password" envconfig:"BOLT_DB_CONN_PASSWORD"`
 	DBName   string `toml:"dbname"   envconfig:"BOLT_DB_CONN_DBNAME"`

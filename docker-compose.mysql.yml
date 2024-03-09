@@ -4,13 +4,13 @@ services:
   mysql_db:
     image: mysql:8.3
     container_name: bolt_mysql_db
-    env_file:
-      - .env.mysql
+    ports:
+      - "${BOLT_DB_CONN_PORT:?err}:3306"
     environment:
-      - MYSQL_DATABASE=${DB_NAME:?err}
-      - MYSQL_USER=${DB_USERNAME:?err}
-      - MYSQL_PASSWORD=${DB_PASSWORD:?err}
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:?err}
+      - MYSQL_DATABASE=${BOLT_DB_CONN_DBNAME:?err}
+      - MYSQL_USER=${BOLT_DB_CONN_USER:?err}
+      - MYSQL_PASSWORD=${BOLT_DB_CONN_PASSWORD:?err}
+      - MYSQL_ROOT_PASSWORD=${BOLT_DB_CONN_PASSWORD:?err}
     volumes:
       - mysql_db_volume:/var/lib/mysql
 

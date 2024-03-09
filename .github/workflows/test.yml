@@ -12,8 +12,8 @@ jobs:
     strategy:
       matrix:
         db:
-          - {name: postgres}
-          # - {name: mysql, version: 8}
+          - {name: postgresql}
+          - {name: mysql}
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v3

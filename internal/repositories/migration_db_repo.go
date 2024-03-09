@@ -7,18 +7,9 @@ import (
 	"strings"
 
 	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/bolt/internal/storage"
+	"github.com/upper/db/v4"
 )
-
-type sqlExecutor interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-}
-
-type SqlDb interface {
-	Exec(query string, args ...any) (sql.Result, error)
-	Query(query string, args ...any) (*sql.Rows, error)
-	QueryRow(query string, args ...any) *sql.Row
-	Begin() (*sql.Tx, error)
-}
 
 type MigrationDBRepo interface {
 	List() (map[string]*models.Migration, error)
@@ -30,15 +21,15 @@ type MigrationDBRepo interface {
 }
 
 type migrationDBRepo struct {
-	db SqlDb
+	db storage.DB
 }
 
 // NewMigrationDBRepo initializes the MigrationDBRepo with a
 // database. Furthermore, it ensures the migration table it
 // operates on exists. If it is unable to create or confirm
 // the table exists, an error is returned.
-func NewMigrationDBRepo(db SqlDb) (MigrationDBRepo, error) {
-	_, err := db.Exec(`
+func NewMigrationDBRepo(db storage.DB) (MigrationDBRepo, error) {
+	_, err := db.Session.SQL().Exec(`
 		CREATE TABLE IF NOT EXISTS bolt_migrations(
 			version CHARACTER(14) PRIMARY KEY NOT NULL
 		);
@@ -58,7 +49,7 @@ func NewMigrationDBRepo(db SqlDb) (MigrationDBRepo, error) {
 // will be ones that have been applied, and their message
 // will always be an empty string.
 func (mr migrationDBRepo) List() (map[string]*models.Migration, error) {
-	rows, err := mr.db.Query(`SELECT version FROM bolt_migrations;`)
+	rows, err := mr.db.Session.SQL().Select("version").From("bolt_migrations").Query()
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to execute query to select versions from "+
@@ -98,9 +89,12 @@ func (mr migrationDBRepo) List() (map[string]*models.Migration, error) {
 // when the version might be applied, but there was an error.
 // Check err first before looking at whether the version is applied.
 func (mr migrationDBRepo) IsApplied(version string) (bool, error) {
-	row := mr.db.QueryRow(`SELECT 1 FROM bolt_migrations WHERE version = $1`, version)
+	row, err := mr.db.Session.SQL().Select(1).From("bolt_migrations").Where("version = ?", version).QueryRow()
+	if err != nil {
+		return false, fmt.Errorf("unable to execute query to check if version exists in bolt_migrations: %w", err)
+	}
 	var scanResult int
-	err := row.Scan(&scanResult)
+	err = row.Scan(&scanResult)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
@@ -122,7 +116,7 @@ func (mr migrationDBRepo) Apply(
 	upgradeScript string,
 	migration *models.Migration,
 ) error {
-	err := applyMigration(mr.db, upgradeScript, *migration)
+	err := applyMigration(mr.db.Session, upgradeScript, *migration)
 	if err != nil {
 		return err
 	}
@@ -137,26 +131,15 @@ func (mr migrationDBRepo) ApplyWithTx(
 	upgradeScript string,
 	migration *models.Migration,
 ) error {
-	tx, err := mr.db.Begin()
-	if err != nil {
-		return fmt.Errorf(
-			"unable to start transaction during upgrade script execution: %w",
-			err,
-		)
-	}
-	defer tx.Rollback()
-
-	err = applyMigration(tx, upgradeScript, *migration)
+	err := mr.db.Session.Tx(func(sess db.Session) error {
+		err := applyMigration(sess, upgradeScript, *migration)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf(
-			"unable to commit transaction during upgrade script execution: %w",
-			err,
-		)
 	}
 
 	migration.Applied = true
@@ -164,22 +147,19 @@ func (mr migrationDBRepo) ApplyWithTx(
 }
 
 func applyMigration(
-	executor sqlExecutor,
+	db db.Session,
 	upgradeScript string,
 	migration models.Migration,
 ) error {
-	_, err := executor.Exec(upgradeScript)
+	_, err := db.SQL().Exec(upgradeScript)
 	if err != nil {
 		return fmt.Errorf("unable to execute upgrade script: %w", err)
 	}
 
-	_, err = executor.Exec(
-		`INSERT INTO bolt_migrations(version) VALUES ($1);`,
-		migration.Version,
-	)
+	_, err = db.SQL().InsertInto("bolt_migrations").Columns("version").Values(migration.Version).Exec()
 	if err != nil {
 		return fmt.Errorf(
-			"unable to insert applied migration: %w",
+			"unable to insert migration: %w",
 			err,
 		)
 	}
@@ -194,7 +174,7 @@ func (mr migrationDBRepo) Revert(
 	downgradeScript string,
 	migration *models.Migration,
 ) error {
-	err := revertMigration(mr.db, downgradeScript, *migration)
+	err := revertMigration(mr.db.Session, downgradeScript, *migration)
 	if err != nil {
 		return err
 	}
@@ -209,26 +189,15 @@ func (mr migrationDBRepo) RevertWithTx(
 	downgradeScript string,
 	migration *models.Migration,
 ) error {
-	tx, err := mr.db.Begin()
-	if err != nil {
-		return fmt.Errorf(
-			"unable to start transaction during downgrade script execution: %w",
-			err,
-		)
-	}
-	defer tx.Rollback()
-
-	err = revertMigration(tx, downgradeScript, *migration)
+	err := mr.db.Session.Tx(func(sess db.Session) error {
+		err := revertMigration(sess, downgradeScript, *migration)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf(
-			"unable to commit transaction during downgrade script execution: %w",
-			err,
-		)
 	}
 
 	migration.Applied = false
@@ -236,19 +205,16 @@ func (mr migrationDBRepo) RevertWithTx(
 }
 
 func revertMigration(
-	executor sqlExecutor,
+	db db.Session,
 	downgradeScript string,
 	migration models.Migration,
 ) error {
-	_, err := executor.Exec(downgradeScript)
+	_, err := db.SQL().Exec(downgradeScript)
 	if err != nil {
 		return fmt.Errorf("unable to execute downgrade script: %w", err)
 	}
 
-	_, err = executor.Exec(
-		`DELETE FROM bolt_migrations WHERE version = $1;`,
-		migration.Version,
-	)
+	_, err = db.SQL().DeleteFrom("bolt_migrations").Where("version = ?", migration.Version).Exec()
 	if err != nil {
 		return fmt.Errorf(
 			"unable to remove reverted migration from bolt_migrations table: %w",

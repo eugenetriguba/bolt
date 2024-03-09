@@ -1,55 +1,38 @@
 package storage_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
-	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/storage"
 	"github.com/eugenetriguba/checkmate/assert"
 )
 
 func TestDBConnect_Success(t *testing.T) {
-	cfg := bolttest.NewTestConnectionConfig(t, "postgres")
-	connParams := storage.DBConnectionString(cfg)
-
-	conn, err := storage.DBConnect(cfg.Driver, connParams)
+	cfg := bolttest.NewTestConnectionConfig()
+	conn, err := storage.DBConnect(cfg)
 	assert.Nil(t, err)
-	defer conn.Close()
+	defer conn.Session.Close()
 
-	_, err = conn.Exec("SELECT 1;")
+	_, err = conn.Session.SQL().Exec("SELECT 1;")
 	assert.Nil(t, err)
-}
-
-func TestDBConnect_BadConnectionString(t *testing.T) {
-	_, err := storage.DBConnect("postgres", "pizza=123")
-	assert.ErrorIs(t, err, storage.ErrUnableToConnect)
-	assert.ErrorContains(t, err, "unable to open connection to database")
 }
 
 func TestDBConnect_UnsupportedDriver(t *testing.T) {
-	cfg := bolttest.NewTestConnectionConfig(t, "redis")
+	t.Setenv("BOLT_DB_CONN_DRIVER", "abc123")
+	cfg := bolttest.NewTestConnectionConfig()
 
-	_, err := storage.DBConnect(cfg.Driver, storage.DBConnectionString(cfg))
+	_, err := storage.DBConnect(cfg)
 	assert.ErrorIs(t, err, storage.ErrUnsupportedDriver)
 }
 
-func TestDBConnectionString(t *testing.T) {
-	cfg := configloader.ConnectionConfig{
-		Driver:   "postgres",
-		Host:     "db1",
-		Port:     5432,
-		User:     "testuser",
-		Password: "supersecretpassword",
-		DBName:   "testdb",
-	}
+func TestDBConnect_BadConnectionString(t *testing.T) {
+	t.Setenv("BOLT_DB_CONN_DRIVER", "mysql")
+	t.Setenv("BOLT_DB_CONN_HOST", "abc123")
+	cfg := bolttest.NewTestConnectionConfig()
 
-	cs := storage.DBConnectionString(&cfg)
+	_, err := storage.DBConnect(cfg)
 
-	expectedConnectionString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName,
-	)
-	assert.Equal(t, cs, expectedConnectionString)
+	assert.ErrorIs(t, err, storage.ErrUnableToConnect)
+	assert.ErrorContains(t, err, "unable to open connection to database")
 }
