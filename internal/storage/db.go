@@ -7,7 +7,7 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var postgresqlDriverName = "postgresql"
