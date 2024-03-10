@@ -151,6 +151,7 @@ $ touch bolt.toml
 ```toml
 [connection]
 host = "localhost"
+port = 5432
 user = "bolt_user"
 password = "bolt_password"
 dbname = "bolt_tutorial_db"
@@ -275,10 +276,10 @@ version_style = "timestamp"
 # required.
 [connection]
 # The host to use to connect to your database.
-# If you need to use a particular port, use <host>:<port>.
-# For example: localhost:5432. Otherwise, whatever port is
-# the default for the database driver will be used.
 host = 
+# The port to use to connect to your database.
+# Note: This should be an integer.
+port = 
 # The user to use to connect to your database.
 user = 
 # The password to use to connect to your database.
@@ -297,6 +298,7 @@ All configuration file settings have corresponding environment variables.
 - `BOLT_MIGRATIONS_DIR_PATH`
 - `BOLT_MIGRATIONS_VERSION_STYLE`
 - `BOLT_DB_CONN_HOST`
+- `BOLT_DB_CONN_PORT`
 - `BOLT_DB_CONN_USER`
 - `BOLT_DB_CONN_PASSWORD`
 - `BOLT_DB_CONN_DBNAME`

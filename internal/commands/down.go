@@ -54,12 +54,12 @@ func (cmd *DownCmd) Execute(
 		return subcommands.ExitFailure
 	}
 
-	db, err := storage.DBConnect(cfg.Connection)
+	db, err := storage.NewDB(cfg.Connection)
 	if err != nil {
 		consoleOutputter.Error(fmt.Errorf("unable to connect to database: %w", err))
 		return subcommands.ExitFailure
 	}
-	defer db.Session.Close()
+	defer db.Close()
 
 	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
 	if err != nil {

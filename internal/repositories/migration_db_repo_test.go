@@ -8,40 +8,38 @@ import (
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/repositories"
 	"github.com/eugenetriguba/checkmate/assert"
-	"github.com/upper/db/v4"
 )
 
 func TestNewMigrationDBRepo_CreatesTable(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
-	exists, err := testdb.Session.Collection("bolt_migrations").Exists()
-	assert.ErrorIs(t, err, db.ErrCollectionDoesNotExist)
+	exists, err := testdb.TableExists("bolt_migrations")
+	assert.Nil(t, err)
 	assert.False(t, exists)
 
 	_, err = repositories.NewMigrationDBRepo(testdb)
 	assert.Nil(t, err)
 
-	exists, err = testdb.Session.Collection("bolt_migrations").Exists()
+	exists, err = testdb.TableExists("bolt_migrations")
 	assert.Nil(t, err)
 	assert.True(t, exists)
 }
 
 func TestNewMigrationDBRepo_TableAlreadyExists(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
-	_, err := testdb.Session.SQL().Exec(`CREATE TABLE bolt_migrations(id INT NOT NULL PRIMARY KEY)`)
+	_, err := testdb.Exec(`CREATE TABLE bolt_migrations(id INT NOT NULL PRIMARY KEY)`)
 	assert.Nil(t, err)
-	_, err = testdb.Session.SQL().Exec(`INSERT INTO bolt_migrations(id) VALUES (1);`)
+	_, err = testdb.Exec(`INSERT INTO bolt_migrations(id) VALUES (1);`)
 	assert.Nil(t, err)
 
 	_, err = repositories.NewMigrationDBRepo(testdb)
 	assert.Nil(t, err)
 
-	count, err := testdb.Session.Collection("bolt_migrations").Find().Count()
+	var count int
+	err = testdb.QueryRow("SELECT count(*) FROM bolt_migrations;").Scan(&count)
 	assert.Nil(t, err)
-	assert.Equal(t, count, uint64(1))
-	row, err := testdb.Session.SQL().Select("id").From("bolt_migrations").QueryRow()
-	assert.Nil(t, err)
+	assert.Equal(t, count, 1)
 	var scanResult int
-	err = row.Scan(&scanResult)
+	err = testdb.QueryRow("SELECT id FROM bolt_migrations;").Scan(&scanResult)
 	assert.Nil(t, err)
 	assert.Equal(t, scanResult, 1)
 }
@@ -62,7 +60,7 @@ func TestList_SingleResult(t *testing.T) {
 	assert.Nil(t, err)
 
 	version := "20230101000000"
-	_, err = db.Session.SQL().InsertInto("bolt_migrations").Columns("version").Values(version).Exec()
+	_, err = db.Exec("INSERT INTO bolt_migrations(version) VALUES(?)", version)
 	assert.Nil(t, err)
 
 	migrations, err := repo.List()
@@ -81,7 +79,7 @@ func TestList_ShortVersion(t *testing.T) {
 	assert.Nil(t, err)
 
 	version := "20230101"
-	_, err = db.Session.SQL().InsertInto("bolt_migrations").Columns("version").Values(version).Exec()
+	_, err = db.Exec("INSERT INTO bolt_migrations(version) VALUES(?)", version)
 	assert.Nil(t, err)
 
 	migrations, err := repo.List()
@@ -111,7 +109,7 @@ func TestIsApplied_WithApplied(t *testing.T) {
 	assert.Nil(t, err)
 
 	version := "20230101010101"
-	_, err = db.Session.SQL().InsertInto("bolt_migrations").Columns("version").Values(version).Exec()
+	_, err = db.Exec("INSERT INTO bolt_migrations(version) VALUES(?)", version)
 	assert.Nil(t, err)
 
 	applied, err := repo.IsApplied(version)
@@ -132,7 +130,7 @@ func TestApply(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, migration.Applied, true)
 
-	exists, err := testdb.Session.Collection("tmp").Exists()
+	exists, err := testdb.TableExists("tmp")
 	assert.Nil(t, err)
 	assert.True(t, exists)
 	applied, err := repo.IsApplied(migration.Version)
@@ -176,7 +174,7 @@ func TestApplyWithTx_SuccessfullyApplied(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, migration.Applied, true)
 
-	exists, err := testdb.Session.Collection("tmp").Exists()
+	exists, err := testdb.TableExists("tmp")
 	assert.Nil(t, err)
 	assert.True(t, exists)
 	applied, err := repo.IsApplied(migration.Version)
@@ -192,11 +190,14 @@ func TestRevert(t *testing.T) {
 		bolttest.DropTable(t, testdb, "tmp")
 	})
 
-	_, err = testdb.Session.SQL().Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
+	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
 	assert.Nil(t, err)
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
-	_, err = testdb.Session.SQL().InsertInto("bolt_migrations").Columns("version").Values(migration.Version).Exec()
+	_, err = testdb.Exec(
+		"INSERT INTO bolt_migrations(version) VALUES(?)",
+		migration.Version,
+	)
 	assert.Nil(t, err)
 	migration.Applied = true
 
@@ -204,12 +205,13 @@ func TestRevert(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, migration.Applied, false)
 
-	exists, err := testdb.Session.Collection("tmp").Exists()
-	assert.ErrorIs(t, err, db.ErrCollectionDoesNotExist)
-	assert.False(t, exists)
-	count, err := testdb.Session.Collection("bolt_migrations").Count()
+	exists, err := testdb.TableExists("tmp")
 	assert.Nil(t, err)
-	assert.Equal(t, count, uint64(0))
+	assert.False(t, exists)
+	var count int
+	err = testdb.QueryRow("SELECT count(*) FROM bolt_migrations;").Scan(&count)
+	assert.Nil(t, err)
+	assert.Equal(t, count, 0)
 }
 
 func TestRevert_MalformedSql(t *testing.T) {
@@ -243,11 +245,14 @@ func TestRevertWithTx_SuccessfullyReverted(t *testing.T) {
 		bolttest.DropTable(t, testdb, "tmp")
 	})
 
-	_, err = testdb.Session.SQL().Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
+	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
 	assert.Nil(t, err)
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
-	_, err = testdb.Session.SQL().InsertInto("bolt_migrations").Columns("version").Values(migration.Version).Exec()
+	_, err = testdb.Exec(
+		"INSERT INTO bolt_migrations(version) VALUES(?)",
+		migration.Version,
+	)
 	assert.Nil(t, err)
 	migration.Applied = true
 
@@ -255,10 +260,11 @@ func TestRevertWithTx_SuccessfullyReverted(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, migration.Applied, false)
 
-	exists, err := testdb.Session.Collection("tmp").Exists()
-	assert.ErrorIs(t, err, db.ErrCollectionDoesNotExist)
-	assert.False(t, exists)
-	count, err := testdb.Session.Collection("bolt_migrations").Count()
+	exists, err := testdb.TableExists("tmp")
 	assert.Nil(t, err)
-	assert.Equal(t, count, uint64(0))
+	assert.False(t, exists)
+	var count int
+	err = testdb.QueryRow("SELECT count(*) FROM bolt_migrations;").Scan(&count)
+	assert.Nil(t, err)
+	assert.Equal(t, count, 0)
 }
