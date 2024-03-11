@@ -155,7 +155,7 @@ port = 5432
 user = "bolt_user"
 password = "bolt_password"
 dbname = "bolt_tutorial_db"
-driver = "postgres"
+driver = "postgresql"
 ```
 
 ### Applying your migration
