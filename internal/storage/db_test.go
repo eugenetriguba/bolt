@@ -3,6 +3,7 @@ package storage_test
 import (
 	"database/sql"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
@@ -27,10 +28,13 @@ func TestNewDB_UnsupportedDriver(t *testing.T) {
 }
 
 func TestNewDB_UnableToConnect(t *testing.T) {
-	t.Setenv("BOLT_DB_CONN_HOST", "")
-	t.Setenv("BOLT_DB_CONN_PORT", "")
-	_, err := storage.NewDB(bolttest.NewTestConnectionConfig())
-	assert.ErrorIs(t, err, storage.ErrUnableToConnect)
+	driver := os.Getenv("BOLT_DB_CONN_DRIVER")
+	if driver != "sqlite3" {
+		t.Setenv("BOLT_DB_CONN_HOST", "")
+		t.Setenv("BOLT_DB_CONN_PORT", "")
+		_, err := storage.NewDB(bolttest.NewTestConnectionConfig())
+		assert.ErrorIs(t, err, storage.ErrUnableToConnect)
+	}
 }
 
 func TestClose_IsClosed(t *testing.T) {

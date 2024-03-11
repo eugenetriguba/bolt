@@ -13,7 +13,7 @@ import (
 	"github.com/eugenetriguba/checkmate/assert"
 )
 
-func TestConvertGenericPlaceholders(t *testing.T) {
+func TestPostgresql_ConvertGenericPlaceholders(t *testing.T) {
 	type test struct {
 		query         string
 		argCount      int
@@ -44,7 +44,7 @@ func TestConvertGenericPlaceholders(t *testing.T) {
 	}
 }
 
-func TestTableExists(t *testing.T) {
+func TestPostgresql_TableExists(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	adapter := storage.PostgresqlAdapter{}
 	db, err := sql.Open("pgx", adapter.CreateDSN(cfg))
@@ -67,7 +67,7 @@ func TestTableExists(t *testing.T) {
 	assert.True(t, exists)
 }
 
-func TestDatabaseName(t *testing.T) {
+func TestPostgresql_DatabaseName(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	adapter := storage.PostgresqlAdapter{}
 	db, err := sql.Open("pgx", adapter.CreateDSN(cfg))
@@ -82,7 +82,7 @@ func TestDatabaseName(t *testing.T) {
 	assert.Equal(t, name, cfg.DBName)
 }
 
-func TestCreateDSN(t *testing.T) {
+func TestPostgresql_CreateDSN(t *testing.T) {
 	cfg := configloader.ConnectionConfig{
 		Driver:   "postgres",
 		Host:     "db1",

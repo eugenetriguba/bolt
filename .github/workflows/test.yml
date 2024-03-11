@@ -15,10 +15,12 @@ jobs:
           - {name: postgresql}
           - {name: mysql}
           - {name: mssql}
+          - {name: sqlite3}
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
     - name: Start Database
+      if: ${{ matrix.db.name }} != 'sqlite3'
       run: |
         env $(cat ".env.${{ matrix.db.name }}" | xargs) docker compose -f "docker-compose.${{ matrix.db.name }}.yml" up -d
     - name: Run Tests

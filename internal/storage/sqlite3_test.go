@@ -1,10 +1,9 @@
-//go:build mssql
+//go:build sqlite3
 
 package storage_test
 
 import (
 	"database/sql"
-	"fmt"
 	"testing"
 
 	"github.com/eugenetriguba/bolt/internal/bolttest"
@@ -13,7 +12,7 @@ import (
 	"github.com/eugenetriguba/checkmate/assert"
 )
 
-func TestMSSQL_ConvertGenericPlaceholders(t *testing.T) {
+func TestSqlite3_ConvertGenericPlaceholders(t *testing.T) {
 	type test struct {
 		query         string
 		argCount      int
@@ -29,25 +28,25 @@ func TestMSSQL_ConvertGenericPlaceholders(t *testing.T) {
 		{
 			query:         "SELECT id, name FROM some_table WHERE id = ?;",
 			argCount:      1,
-			expectedQuery: "SELECT id, name FROM some_table WHERE id = @p1;",
+			expectedQuery: "SELECT id, name FROM some_table WHERE id = ?;",
 		},
 		{
 			query:         "SELECT id, name FROM some_table WHERE id = ? AND name = ?;",
 			argCount:      2,
-			expectedQuery: "SELECT id, name FROM some_table WHERE id = @p1 AND name = @p2;",
+			expectedQuery: "SELECT id, name FROM some_table WHERE id = ? AND name = ?;",
 		},
 	}
 	for _, tc := range testCases {
-		adapter := storage.MSSQLAdapter{}
+		adapter := storage.MySQLAdapter{}
 		newQuery := adapter.ConvertGenericPlaceholders(tc.query, tc.argCount)
 		assert.Equal(t, newQuery, tc.expectedQuery)
 	}
 }
 
-func TestMSSQL_TableExists(t *testing.T) {
+func TestSqlite3_TableExists(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
-	adapter := storage.MSSQLAdapter{}
-	db, err := sql.Open("sqlserver", adapter.CreateDSN(cfg))
+	adapter := storage.SqliteAdapter{}
+	db, err := sql.Open("sqlite3", adapter.CreateDSN(cfg))
 	assert.Nil(t, err)
 	t.Cleanup(func() {
 		_, err = db.Exec("DROP TABLE IF EXISTS tmp;")
@@ -67,10 +66,10 @@ func TestMSSQL_TableExists(t *testing.T) {
 	assert.True(t, exists)
 }
 
-func TestMSSQL_DatabaseName(t *testing.T) {
+func TestSqlite3_DatabaseName(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
-	adapter := storage.MSSQLAdapter{}
-	db, err := sql.Open("sqlserver", adapter.CreateDSN(cfg))
+	adapter := storage.SqliteAdapter{}
+	db, err := sql.Open("sqlite3", adapter.CreateDSN(cfg))
 	assert.Nil(t, err)
 	t.Cleanup(func() {
 		assert.Nil(t, db.Close())
@@ -79,45 +78,17 @@ func TestMSSQL_DatabaseName(t *testing.T) {
 	name, err := adapter.DatabaseName(db)
 	assert.Nil(t, err)
 
-	assert.Equal(t, name, cfg.DBName)
+	assert.Equal(t, name, "main")
 }
 
-func TestMSSQL_CreateDSN(t *testing.T) {
+func TestSqlite3_CreateDSN(t *testing.T) {
 	cfg := configloader.ConnectionConfig{
-		Driver:   "mssql",
-		Host:     "db1",
-		Port:     "5432",
-		User:     "testuser",
-		Password: "supersecretpassword",
-		DBName:   "testdb",
+		Driver: "sqlite3",
+		DBName: "./tmp/test.db",
 	}
-	adapter := storage.MSSQLAdapter{}
+	adapter := storage.SqliteAdapter{}
 
 	cs := adapter.CreateDSN(cfg)
 
-	expectedConnectionString := fmt.Sprintf(
-		"sqlserver://%s:%s@%s:%s?database=%s&dial+timeout=0&disableretry=false",
-		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DBName,
-	)
-	assert.Equal(t, cs, expectedConnectionString)
-}
-
-func TestMSSQL_CreateDSN_UnparsablePort(t *testing.T) {
-	cfg := configloader.ConnectionConfig{
-		Driver:   "mssql",
-		Host:     "db1",
-		Port:     "abc123",
-		User:     "testuser",
-		Password: "supersecretpassword",
-		DBName:   "testdb",
-	}
-	adapter := storage.MSSQLAdapter{}
-
-	cs := adapter.CreateDSN(cfg)
-
-	expectedConnectionString := fmt.Sprintf(
-		"sqlserver://%s:%s@%s:%s?database=%s&dial+timeout=0&disableretry=false",
-		cfg.User, cfg.Password, cfg.Host, "1433", cfg.DBName,
-	)
-	assert.Equal(t, cs, expectedConnectionString)
+	assert.Equal(t, cs, cfg.DBName)
 }

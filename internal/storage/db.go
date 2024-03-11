@@ -8,17 +8,20 @@ import (
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/microsoft/go-mssqldb"
 )
 
 var postgresqlDriverName = "postgresql"
 var mysqlDriverName = "mysql"
 var mssqlDriverName = "mssql"
+var sqliteDriverName = "sqlite3"
 
 var supportedDrivers = map[string]dbDriver{
 	postgresqlDriverName: {name: "pgx", adapter: PostgresqlAdapter{}},
 	mysqlDriverName:      {name: "mysql", adapter: MySQLAdapter{}},
 	mssqlDriverName:      {name: "sqlserver", adapter: MSSQLAdapter{}},
+	sqliteDriverName:     {name: "sqlite3", adapter: SqliteAdapter{}},
 }
 
 type dbDriver struct {
@@ -33,7 +36,7 @@ var (
 	ErrUnableToConnect   = errors.New("unable to open connection to database")
 	ErrUnsupportedDriver = fmt.Errorf(
 		"unsupported driver, supported drivers are %s",
-		[]string{postgresqlDriverName, mysqlDriverName, mssqlDriverName},
+		[]string{postgresqlDriverName, mysqlDriverName, mssqlDriverName, sqliteDriverName},
 	)
 )
 

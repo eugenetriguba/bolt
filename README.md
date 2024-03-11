@@ -248,6 +248,7 @@ In your `upgrade.sql` or `downgrade.sql`, add the following line as the first li
 - PostgreSQL
 - MySQL
 - Microsoft SQL Server
+- SQLite3
 
 ### Configuration
 
@@ -288,7 +289,7 @@ password =
 # The name of the database within your DBMS.
 dbname = 
 # The name of the database driver to use to connect to
-# the database. Either "postgresql", "mysql", or "mssql".
+# the database. Either "postgresql", "mysql", "mssql", or "sqlite3".
 driver = 
 ```
 
