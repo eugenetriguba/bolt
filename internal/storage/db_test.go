@@ -51,6 +51,7 @@ func TestTableExists_DoesExist(t *testing.T) {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
+	bolttest.DropTable(t, db, "tmp")
 	_, err = db.Exec("CREATE TABLE tmp(id int primary key);")
 	assert.Nil(t, err)
 
@@ -82,6 +83,7 @@ func TestQueryPlaceholders(t *testing.T) {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
+	bolttest.DropTable(t, db, "tmp")
 	_, err = db.Exec(`CREATE TABLE tmp(id int primary key);`)
 	assert.Nil(t, err)
 	_, err = db.Exec(`INSERT INTO tmp(id) VALUES(1);`)
