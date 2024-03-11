@@ -13,14 +13,14 @@ import (
 var postgresqlDriverName = "postgresql"
 var mysqlDriverName = "mysql"
 
-var supportedDrivers = map[string]string{
-	postgresqlDriverName: "pgx",
-	mysqlDriverName:      "mysql",
+var supportedDrivers = map[string]dbDriver{
+	postgresqlDriverName: {name: "pgx", adapter: PostgresqlAdapter{}},
+	mysqlDriverName:      {name: "mysql", adapter: MySQLAdapter{}},
 }
 
-var driverAdapters = map[string]DBAdapter{
-	postgresqlDriverName: PostgresqlAdapter{},
-	mysqlDriverName:      MySQLAdapter{},
+type dbDriver struct {
+	name    string
+	adapter DBAdapter
 }
 
 var (
@@ -56,17 +56,12 @@ type DB struct {
 //     the provided connection parameters.
 //   - ErrUnsupportedDriver: The provided driver is not supported.
 func NewDB(cfg configloader.ConnectionConfig) (DB, error) {
-	driverName, exists := supportedDrivers[cfg.Driver]
+	driver, exists := supportedDrivers[cfg.Driver]
 	if !exists {
 		return DB{}, ErrUnsupportedDriver
 	}
 
-	adapter, exists := driverAdapters[cfg.Driver]
-	if !exists {
-		return DB{}, ErrUnsupportedDriver
-	}
-
-	db, err := sql.Open(driverName, adapter.CreateDSN(cfg))
+	db, err := sql.Open(driver.name, driver.adapter.CreateDSN(cfg))
 	if err != nil {
 		return DB{}, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
 	}
@@ -79,7 +74,7 @@ func NewDB(cfg configloader.ConnectionConfig) (DB, error) {
 		return DB{}, fmt.Errorf("%w: %v", ErrUnableToConnect, err)
 	}
 
-	return DB{executor: db, sqlDB: db, adapter: adapter}, nil
+	return DB{executor: db, sqlDB: db, adapter: driver.adapter}, nil
 }
 
 // Close closes the database connection. Any further
@@ -89,27 +84,35 @@ func (db DB) Close() error {
 	return db.sqlDB.Close()
 }
 
+// Exec is a wrapper around the sql.DB Exec.
 func (db DB) Exec(query string, args ...any) (sql.Result, error) {
 	newQuery := db.adapter.ConvertGenericPlaceholders(query, len(args))
 	return db.executor.Exec(newQuery, args...)
 }
 
+// Query is a wrapper around the sql.DB Query.
 func (db DB) Query(query string, args ...any) (*sql.Rows, error) {
 	newQuery := db.adapter.ConvertGenericPlaceholders(query, len(args))
 	return db.executor.Query(newQuery, args...)
 }
 
+// QueryRow is a wrapper around the sql.DB QueryRow.
 func (db DB) QueryRow(query string, args ...any) *sql.Row {
 	newQuery := db.adapter.ConvertGenericPlaceholders(query, len(args))
 	return db.executor.QueryRow(newQuery, args...)
 }
 
+// TableExists checks if the tableName exists within the
+// database currently connected to.
 func (db DB) TableExists(tableName string) (bool, error) {
 	return db.adapter.TableExists(db.executor, tableName)
 }
 
 type txFunc func(db DB) error
 
+// Tx executes fn within a transaction block. If
+// fn returns an error, the transaction will be rolled
+// back. Otherwise, it will be committed.
 func (db *DB) Tx(fn txFunc) error {
 	tx, err := db.sqlDB.Begin()
 	if err != nil {
@@ -127,12 +130,12 @@ func (db *DB) Tx(fn txFunc) error {
 
 	err = fn(txDB)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to execute transaction: %w", err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to commit transaction: %w", err)
 	}
 
 	return nil

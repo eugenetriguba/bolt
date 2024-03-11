@@ -12,13 +12,13 @@ import (
 
 func NewTestDB(t *testing.T) storage.DB {
 	connectionConfig := NewTestConnectionConfig()
-	testdb, err := storage.NewDB(connectionConfig)
+	db, err := storage.NewDB(connectionConfig)
 	assert.Nil(t, err)
 	t.Cleanup(func() {
-		DropTable(t, testdb, "bolt_migrations")
-		assert.Nil(t, testdb.Close())
+		DropTable(t, db, "bolt_migrations")
+		assert.Nil(t, db.Close())
 	})
-	return testdb
+	return db
 }
 
 func NewTestConnectionConfig() configloader.ConnectionConfig {
@@ -32,7 +32,7 @@ func NewTestConnectionConfig() configloader.ConnectionConfig {
 	}
 }
 
-func DropTable(t *testing.T, testdb storage.DB, tableName string) {
-	_, err := testdb.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
+func DropTable(t *testing.T, db storage.DB, tableName string) {
+	_, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
 	assert.Nil(t, err)
 }

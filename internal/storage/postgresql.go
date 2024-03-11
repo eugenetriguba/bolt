@@ -55,7 +55,7 @@ func (p PostgresqlAdapter) TableExists(
 
 func (p PostgresqlAdapter) DatabaseName(executor sqlExecutor) (string, error) {
 	var name string
-	err := executor.QueryRow("SELECT database_name();").Scan(&name)
+	err := executor.QueryRow("SELECT current_database();").Scan(&name)
 	if err != nil {
 		return "", fmt.Errorf("unable to retrieve database name: %w", err)
 	}
