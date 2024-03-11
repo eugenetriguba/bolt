@@ -17,7 +17,7 @@
 Bolt is a command-line tool designed to simplify and streamline your database migration process.
 
 🌟 Key Features:
-- **SQL-Powered Flexibility**: 🧩 - Write your migration scripts in plain SQL. This gives you the full power and familiarity of SQL.
+- **SQL-Powered Flexibility**: 🧩 - Write your migration scripts in plain SQL.
 
 - **Bidirectional Migrations**: 🔀 - With support for both 'up' (migrating) and 'down' (downgrading) migrations, Bolt provides complete control over your database versions.
 
@@ -247,6 +247,7 @@ In your `upgrade.sql` or `downgrade.sql`, add the following line as the first li
 
 - PostgreSQL
 - MySQL
+- Microsoft SQL Server
 
 ### Configuration
 
@@ -287,7 +288,7 @@ password =
 # The name of the database within your DBMS.
 dbname = 
 # The name of the database driver to use to connect to
-# the database. Either "postgresql" or "mysql".
+# the database. Either "postgresql", "mysql", or "mssql".
 driver = 
 ```
 

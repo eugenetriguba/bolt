@@ -245,6 +245,7 @@ func TestRevertWithTx_SuccessfullyReverted(t *testing.T) {
 	t.Cleanup(func() {
 		bolttest.DropTable(t, testdb, "tmp")
 	})
+	bolttest.DropTable(t, testdb, "tmp")
 
 	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
 	assert.Nil(t, err)

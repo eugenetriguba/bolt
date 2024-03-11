@@ -28,16 +28,26 @@ type migrationDBRepo struct {
 // operates on exists. If it is unable to create or confirm
 // the table exists, an error is returned.
 func NewMigrationDBRepo(db storage.DB) (MigrationDBRepo, error) {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS bolt_migrations(
-			version CHARACTER(14) PRIMARY KEY NOT NULL
-		);
-	`)
+	migrationTableExists, err := db.TableExists("bolt_migrations")
 	if err != nil {
 		return nil, fmt.Errorf(
-			"unable to create or confirm bolt_migrations database table exists: %w",
+			"unable to confirm bolt_migrations database table exists: %w",
 			err,
 		)
+	}
+
+	if !migrationTableExists {
+		_, err := db.Exec(`
+			CREATE TABLE bolt_migrations(
+				version CHARACTER(14) PRIMARY KEY NOT NULL
+			);
+		`)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to create bolt_migrations database table: %w",
+				err,
+			)
+		}
 	}
 
 	return &migrationDBRepo{db: db}, nil
