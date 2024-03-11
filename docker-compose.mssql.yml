@@ -4,6 +4,15 @@ services:
   mssql_db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: bolt_mssql_db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools/bin/sqlcmd -S ${BOLT_DB_CONN_HOST:?err} -U ${BOLT_DB_CONN_USER:?err} -P ${BOLT_DB_CONN_PASSWORD:?err} -Q 'SELECT 1'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "${BOLT_DB_CONN_PORT:?err}:1433"
     environment:

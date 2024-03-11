@@ -4,6 +4,11 @@ services:
   mysql_db:
     image: mysql:8.3
     container_name: bolt_mysql_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "${BOLT_DB_CONN_HOST:?err}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "${BOLT_DB_CONN_PORT:?err}:3306"
     environment:
