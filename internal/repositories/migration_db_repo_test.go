@@ -124,6 +124,7 @@ func TestApply(t *testing.T) {
 	t.Cleanup(func() {
 		bolttest.DropTable(t, testdb, "tmp")
 	})
+	bolttest.DropTable(t, testdb, "tmp")
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
 	err = repo.Apply(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`, migration)

@@ -114,6 +114,7 @@ func TestTx_Commit(t *testing.T) {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
+	bolttest.DropTable(t, db, "tmp")
 
 	err = db.Tx(func(db storage.DB) error {
 		_, err = db.Exec(`CREATE TABLE tmp(id int primary key);`)
@@ -135,6 +136,7 @@ func TestTx_Rollback(t *testing.T) {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
+	bolttest.DropTable(t, db, "tmp")
 	_, err = db.Exec(`CREATE TABLE tmp(id INT PRIMARY KEY);`)
 	assert.Nil(t, err)
 	expectedErr := errors.New("error!")
