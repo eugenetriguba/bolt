@@ -14,10 +14,15 @@ func NewTestDB(t *testing.T) storage.DB {
 	connectionConfig := NewTestConnectionConfig()
 	db, err := storage.NewDB(connectionConfig)
 	assert.Nil(t, err)
+
+	DropTable(t, db, "bolt_migrations")
+	DropTable(t, db, "tmp")
 	t.Cleanup(func() {
 		DropTable(t, db, "bolt_migrations")
+		DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
+
 	return db
 }
 

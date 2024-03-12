@@ -51,11 +51,11 @@ func TestClose_IsClosed(t *testing.T) {
 func TestTableExists_DoesExist(t *testing.T) {
 	db, err := storage.NewDB(bolttest.NewTestConnectionConfig())
 	assert.Nil(t, err)
+	bolttest.DropTable(t, db, "tmp")
 	t.Cleanup(func() {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
-	bolttest.DropTable(t, db, "tmp")
 	_, err = db.Exec("CREATE TABLE tmp(id int primary key);")
 	assert.Nil(t, err)
 
@@ -83,11 +83,11 @@ func TestQueryPlaceholders(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	db, err := storage.NewDB(cfg)
 	assert.Nil(t, err)
+	bolttest.DropTable(t, db, "tmp")
 	t.Cleanup(func() {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
-	bolttest.DropTable(t, db, "tmp")
 	_, err = db.Exec(`CREATE TABLE tmp(id int primary key);`)
 	assert.Nil(t, err)
 	_, err = db.Exec(`INSERT INTO tmp(id) VALUES(1);`)
@@ -114,11 +114,11 @@ func TestTx_Commit(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	db, err := storage.NewDB(cfg)
 	assert.Nil(t, err)
+	bolttest.DropTable(t, db, "tmp")
 	t.Cleanup(func() {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
-	bolttest.DropTable(t, db, "tmp")
 
 	err = db.Tx(func(db storage.DB) error {
 		_, err = db.Exec(`CREATE TABLE tmp(id int primary key);`)
@@ -136,11 +136,11 @@ func TestTx_Rollback(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	db, err := storage.NewDB(cfg)
 	assert.Nil(t, err)
+	bolttest.DropTable(t, db, "tmp")
 	t.Cleanup(func() {
 		bolttest.DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
-	bolttest.DropTable(t, db, "tmp")
 	_, err = db.Exec(`CREATE TABLE tmp(id INT PRIMARY KEY);`)
 	assert.Nil(t, err)
 	expectedErr := errors.New("error!")

@@ -121,10 +121,6 @@ func TestApply(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo(testdb)
 	assert.Nil(t, err)
-	t.Cleanup(func() {
-		bolttest.DropTable(t, testdb, "tmp")
-	})
-	bolttest.DropTable(t, testdb, "tmp")
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
 	err = repo.Apply(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`, migration)
@@ -166,9 +162,6 @@ func TestApplyWithTx_SuccessfullyApplied(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo(testdb)
 	assert.Nil(t, err)
-	t.Cleanup(func() {
-		bolttest.DropTable(t, testdb, "tmp")
-	})
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
 	err = repo.ApplyWithTx(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`, migration)
@@ -187,9 +180,6 @@ func TestRevert(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo(testdb)
 	assert.Nil(t, err)
-	t.Cleanup(func() {
-		bolttest.DropTable(t, testdb, "tmp")
-	})
 
 	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
 	assert.Nil(t, err)
@@ -242,10 +232,6 @@ func TestRevertWithTx_SuccessfullyReverted(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo(testdb)
 	assert.Nil(t, err)
-	t.Cleanup(func() {
-		bolttest.DropTable(t, testdb, "tmp")
-	})
-	bolttest.DropTable(t, testdb, "tmp")
 
 	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
 	assert.Nil(t, err)
