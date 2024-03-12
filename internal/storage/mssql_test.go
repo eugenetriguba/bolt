@@ -49,6 +49,8 @@ func TestMSSQL_TableExists(t *testing.T) {
 	adapter := storage.MSSQLAdapter{}
 	db, err := sql.Open("sqlserver", adapter.CreateDSN(cfg))
 	assert.Nil(t, err)
+	_, err = db.Exec("DROP TABLE IF EXISTS tmp;")
+	assert.Nil(t, err)
 	t.Cleanup(func() {
 		_, err = db.Exec("DROP TABLE IF EXISTS tmp;")
 		assert.Nil(t, err)
