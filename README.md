@@ -267,11 +267,11 @@ or in any parent directory.
 # path.
 directory_path = "migrations"
 # The migration versioning style you prefer. Supported options
-# are "timestamp" and "sequential". Defaults to "timestamp".
+# are "timestamp" and "sequential". Defaults to "sequential".
 #
 # Note: It is not supported to change migration version styles
 # i.e. you can't have a mix of sequential and timestamp migrations.
-version_style = "timestamp"
+version_style = "sequential"
 
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
@@ -286,7 +286,8 @@ port =
 user = 
 # The password to use to connect to your database.
 password = 
-# The name of the database within your DBMS.
+# The name of the database within your DBMS. If you're
+# using sqlite3, this is the filesystem path to the db.
 dbname = 
 # The name of the database driver to use to connect to
 # the database. Either "postgresql", "mysql", "mssql", or "sqlite3".
