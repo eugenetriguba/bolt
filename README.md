@@ -87,7 +87,7 @@ Upon completion, a migrations directory will be created with the following struc
 
 ```bash
 migrations/
-└── 20240113162817_my_first_migration
+└── 001_my_first_migration
     ├── downgrade.sql
     └── upgrade.sql
 
@@ -164,8 +164,8 @@ Apply your migration, which will execute the `upgrade.sql` script:
 
 ```bash
 $ bolt up
-Applying migration 20240113162817_my_first_migration..
-Successfully applied migration 20240113162817_my_first_migration!
+Applying migration 001_my_first_migration..
+Successfully applied migration 001_my_first_migration!
 ```
 
 ### Checking Migration Status
@@ -175,7 +175,7 @@ To view the status of your migration:
 ```bash
 $ bolt status
 Version           Message               Applied
-20240113162817    my_first_migration    X
+001               my_first_migration    X
 ```
 
 This command displays the migration's version, name, and whether the migration was applied or not.
@@ -206,8 +206,8 @@ To revert your migration:
 
 ```bash
 $ bolt down
-Reverting migration 20240113162817_my_first_migration..
-Successfully reverted migration 20240113162817_my_first_migration!
+Reverting migration 001_my_first_migration..
+Successfully reverted migration 001_my_first_migration!
 ```
 
 ### Verifying Migration Reversion
