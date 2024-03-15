@@ -412,6 +412,31 @@ func TestCreateMigration_VersionStyleSequential(t *testing.T) {
 	check.Equal(t, migration.Applied, false)
 }
 
+func TestCreateMigration_NilDbRepo(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		CreateReturnValue: bolttest.CreateReturnValue{
+			Err: nil,
+		},
+	}
+	svc := NewMigrationService(
+		nil,
+		migrationFsRepo,
+		configloader.Config{
+			Migrations: configloader.MigrationsConfig{
+				VersionStyle: configloader.VersionStyleSequential,
+			},
+		},
+		bolttest.NullOutputter{},
+	)
+
+	migration, err := svc.CreateMigration("new migration")
+
+	assert.Nil(t, err)
+	check.Equal(t, migration.Version, "001")
+	check.Equal(t, migration.Message, "new migration")
+	check.Equal(t, migration.Applied, false)
+}
+
 func TestCreateMigration_CreateErr(t *testing.T) {
 	expectedErr := errors.New("error!")
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{

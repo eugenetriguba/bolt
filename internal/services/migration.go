@@ -283,7 +283,12 @@ func (ms MigrationService) CreateMigration(message string) (*models.Migration, e
 func (ms MigrationService) getCurrentSequentialMigrationVersion() (uint64, error) {
 	var currentVersion uint64 = 0
 
-	migrations, err := ms.ListMigrations(SortOrderDesc)
+	localMigrations, err := ms.fsRepo.List()
+	if err != nil {
+		return 0, fmt.Errorf("unable to list out local filesystem migrations: %w", err)
+	}
+
+	migrations, err := ms.combineMigrations(localMigrations, map[string]*models.Migration{}, SortOrderDesc)
 	if err != nil {
 		return 0, err
 	}
@@ -319,6 +324,14 @@ func (ms MigrationService) ListMigrations(order sortOrder) ([]*models.Migration,
 		)
 	}
 
+	return ms.combineMigrations(localMigrations, appliedMigrations, order)
+}
+
+func (ms MigrationService) combineMigrations(
+	localMigrations map[string]*models.Migration,
+	appliedMigrations map[string]*models.Migration,
+	order sortOrder,
+) ([]*models.Migration, error) {
 	migrations := make([]*models.Migration, 0)
 	for _, localMigration := range localMigrations {
 		_, ok := appliedMigrations[localMigration.Version]
@@ -328,7 +341,7 @@ func (ms MigrationService) ListMigrations(order sortOrder) ([]*models.Migration,
 		migrations = append(migrations, localMigration)
 	}
 
-	err = ms.sortMigrations(migrations, order)
+	err := ms.sortMigrations(migrations, order)
 	if err != nil {
 		return nil, err
 	}

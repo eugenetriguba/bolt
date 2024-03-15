@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Renamed the `[connection]` section of `bolt.toml` to `[database]`.
 
+### Fixed
+
+- Panic that occurs when `bolt new` is run without a remote database connection setup.
+
 ## [0.6.0] - 2024-03-11
 
 ### Added
