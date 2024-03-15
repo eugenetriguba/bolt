@@ -30,8 +30,8 @@ func TestNewDB_UnsupportedDriver(t *testing.T) {
 func TestNewDB_UnableToConnect(t *testing.T) {
 	driver := os.Getenv("BOLT_DB_DRIVER")
 	if driver != "sqlite3" {
-		t.Setenv("BOLT_DB_CONN_HOST", "")
-		t.Setenv("BOLT_DB_CONN_PORT", "")
+		t.Setenv("BOLT_DB_HOST", "")
+		t.Setenv("BOLT_DB_PORT", "")
 		_, err := storage.NewDB(bolttest.NewTestConnectionConfig())
 		assert.ErrorIs(t, err, storage.ErrUnableToConnect)
 	}
