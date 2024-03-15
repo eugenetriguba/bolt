@@ -35,12 +35,12 @@ func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_HOST")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PORT")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_USER")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PASSWORD")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DBNAME")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_DB_HOST")
+	bolttest.UnsetEnv(t, "BOLT_DB_PORT")
+	bolttest.UnsetEnv(t, "BOLT_DB_USER")
+	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
+	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
+	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
 	expectedCfg := configloader.Config{
@@ -100,12 +100,12 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	}
 	t.Setenv("BOLT_MIGRATIONS_VERSION_STYLE", string(envCfg.Migrations.VersionStyle))
 	t.Setenv("BOLT_MIGRATIONS_DIR_PATH", envCfg.Migrations.DirectoryPath)
-	t.Setenv("BOLT_DB_CONN_HOST", envCfg.Connection.Host)
-	t.Setenv("BOLT_DB_CONN_PORT", envCfg.Connection.Port)
-	t.Setenv("BOLT_DB_CONN_USER", envCfg.Connection.User)
-	t.Setenv("BOLT_DB_CONN_PASSWORD", envCfg.Connection.Password)
-	t.Setenv("BOLT_DB_CONN_DBNAME", envCfg.Connection.DBName)
-	t.Setenv("BOLT_DB_CONN_DRIVER", envCfg.Connection.Driver)
+	t.Setenv("BOLT_DB_HOST", envCfg.Connection.Host)
+	t.Setenv("BOLT_DB_PORT", envCfg.Connection.Port)
+	t.Setenv("BOLT_DB_USER", envCfg.Connection.User)
+	t.Setenv("BOLT_DB_PASSWORD", envCfg.Connection.Password)
+	t.Setenv("BOLT_DB_NAME", envCfg.Connection.DBName)
+	t.Setenv("BOLT_DB_DRIVER", envCfg.Connection.Driver)
 
 	cfg, err := configloader.NewConfig()
 	assert.Nil(t, err)
@@ -113,12 +113,12 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 }
 
 func TestNewConfigSearchesParentDirectories(t *testing.T) {
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_HOST")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PORT")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_USER")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_PASSWORD")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DBNAME")
-	bolttest.UnsetEnv(t, "BOLT_DB_CONN_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_DB_HOST")
+	bolttest.UnsetEnv(t, "BOLT_DB_PORT")
+	bolttest.UnsetEnv(t, "BOLT_DB_USER")
+	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
+	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
+	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
 	expectedCfg := configloader.Config{

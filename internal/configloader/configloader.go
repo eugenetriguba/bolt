@@ -45,7 +45,7 @@ type Config struct {
 
 	// Information related to how to connect to the database
 	// that is desired to run migrations against.
-	Connection ConnectionConfig `toml:"connection"`
+	Connection ConnectionConfig `toml:"database"`
 }
 
 type MigrationsConfig struct {
@@ -54,12 +54,12 @@ type MigrationsConfig struct {
 }
 
 type ConnectionConfig struct {
-	Host     string `toml:"host"     envconfig:"BOLT_DB_CONN_HOST"`
-	Port     string `toml:"port"     envconfig:"BOLT_DB_CONN_PORT"`
-	User     string `toml:"user"     envconfig:"BOLT_DB_CONN_USER"`
-	Password string `toml:"password" envconfig:"BOLT_DB_CONN_PASSWORD"`
-	DBName   string `toml:"dbname"   envconfig:"BOLT_DB_CONN_DBNAME"`
-	Driver   string `toml:"driver"   envconfig:"BOLT_DB_CONN_DRIVER"`
+	Host     string `toml:"host"     envconfig:"BOLT_DB_HOST"`
+	Port     string `toml:"port"     envconfig:"BOLT_DB_PORT"`
+	User     string `toml:"user"     envconfig:"BOLT_DB_USER"`
+	Password string `toml:"password" envconfig:"BOLT_DB_PASSWORD"`
+	DBName   string `toml:"dbname"   envconfig:"BOLT_DB_NAME"`
+	Driver   string `toml:"driver"   envconfig:"BOLT_DB_DRIVER"`
 }
 
 func NewConfig() (*Config, error) {

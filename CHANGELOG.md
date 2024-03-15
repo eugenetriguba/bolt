@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Renamed the following environment variables names:
+  - `BOLT_DB_CONN_HOST` -> `BOLT_DB_HOST`
+  - `BOLT_DB_CONN_PORT` -> `BOLT_DB_PORT`
+  - `BOLT_DB_CONN_USER` -> `BOLT_DB_USER`
+  - `BOLT_DB_CONN_PASSWORD` -> `BOLT_DB_PASSWORD`
+  - `BOLT_DB_CONN_DBNAME` -> `BOLT_DB_NAME`
+  - `BOLT_DB_CONN_DRIVER` -> `BOLT_DB_DRIVER`
+
+- Renamed the `[connection]` section of `bolt.toml` to `[database]`.
+
 ## [0.6.0] - 2024-03-11
 
 ### Added

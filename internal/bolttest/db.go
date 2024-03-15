@@ -28,12 +28,12 @@ func NewTestDB(t *testing.T) storage.DB {
 
 func NewTestConnectionConfig() configloader.ConnectionConfig {
 	return configloader.ConnectionConfig{
-		Driver:   os.Getenv("BOLT_DB_CONN_DRIVER"),
-		DBName:   os.Getenv("BOLT_DB_CONN_DBNAME"),
-		Host:     os.Getenv("BOLT_DB_CONN_HOST"),
-		Port:     os.Getenv("BOLT_DB_CONN_PORT"),
-		User:     os.Getenv("BOLT_DB_CONN_USER"),
-		Password: os.Getenv("BOLT_DB_CONN_PASSWORD"),
+		Driver:   os.Getenv("BOLT_DB_DRIVER"),
+		DBName:   os.Getenv("BOLT_DB_NAME"),
+		Host:     os.Getenv("BOLT_DB_HOST"),
+		Port:     os.Getenv("BOLT_DB_PORT"),
+		User:     os.Getenv("BOLT_DB_USER"),
+		Password: os.Getenv("BOLT_DB_PASSWORD"),
 	}
 }
 

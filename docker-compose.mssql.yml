@@ -8,13 +8,13 @@ services:
       test:
         [
           "CMD-SHELL",
-          "/opt/mssql-tools/bin/sqlcmd -S ${BOLT_DB_CONN_HOST:?err} -U ${BOLT_DB_CONN_USER:?err} -P ${BOLT_DB_CONN_PASSWORD:?err} -Q 'SELECT 1'",
+          "/opt/mssql-tools/bin/sqlcmd -S ${BOLT_DB_HOST:?err} -U ${BOLT_DB_USER:?err} -P ${BOLT_DB_PASSWORD:?err} -Q 'SELECT 1'",
         ]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-      - "${BOLT_DB_CONN_PORT:?err}:1433"
+      - "${BOLT_DB_PORT:?err}:1433"
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=${BOLT_DB_CONN_PASSWORD:?err}
+      - MSSQL_SA_PASSWORD=${BOLT_DB_PASSWORD:?err}

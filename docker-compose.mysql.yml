@@ -5,17 +5,17 @@ services:
     image: mysql:8.3
     container_name: bolt_mysql_db
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "${BOLT_DB_CONN_HOST:?err}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "${BOLT_DB_HOST:?err}"]
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-      - "${BOLT_DB_CONN_PORT:?err}:3306"
+      - "${BOLT_DB_PORT:?err}:3306"
     environment:
-      - MYSQL_DATABASE=${BOLT_DB_CONN_DBNAME:?err}
-      - MYSQL_USER=${BOLT_DB_CONN_USER:?err}
-      - MYSQL_PASSWORD=${BOLT_DB_CONN_PASSWORD:?err}
-      - MYSQL_ROOT_PASSWORD=${BOLT_DB_CONN_PASSWORD:?err}
+      - MYSQL_DATABASE=${BOLT_DB_NAME:?err}
+      - MYSQL_USER=${BOLT_DB_USER:?err}
+      - MYSQL_PASSWORD=${BOLT_DB_PASSWORD:?err}
+      - MYSQL_ROOT_PASSWORD=${BOLT_DB_PASSWORD:?err}
     volumes:
       - mysql_db_volume:/var/lib/mysql
 

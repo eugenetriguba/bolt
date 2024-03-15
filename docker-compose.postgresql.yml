@@ -10,11 +10,11 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "${BOLT_DB_CONN_PORT:?err}:5432"
+      - "${BOLT_DB_PORT:?err}:5432"
     environment:
-      - POSTGRES_DB=${BOLT_DB_CONN_DBNAME:?err}
-      - POSTGRES_USER=${BOLT_DB_CONN_USER:?err}
-      - POSTGRES_PASSWORD=${BOLT_DB_CONN_PASSWORD:?err}
+      - POSTGRES_DB=${BOLT_DB_NAME:?err}
+      - POSTGRES_USER=${BOLT_DB_USER:?err}
+      - POSTGRES_PASSWORD=${BOLT_DB_PASSWORD:?err}
     volumes:
       - postgres_db_volume:/var/lib/postgresql/data
 

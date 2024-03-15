@@ -149,7 +149,7 @@ $ touch bolt.toml
 2. Add the following contents to the file:
 
 ```toml
-[connection]
+[database]
 host = "localhost"
 port = 5432
 user = "bolt_user"
@@ -276,11 +276,10 @@ version_style = "sequential"
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
 # required.
-[connection]
+[database]
 # The host to use to connect to your database.
 host = 
 # The port to use to connect to your database.
-# Note: This should be an integer.
 port = 
 # The user to use to connect to your database.
 user = 
@@ -300,12 +299,12 @@ All configuration file settings have corresponding environment variables.
 
 - `BOLT_MIGRATIONS_DIR_PATH`
 - `BOLT_MIGRATIONS_VERSION_STYLE`
-- `BOLT_DB_CONN_HOST`
-- `BOLT_DB_CONN_PORT`
-- `BOLT_DB_CONN_USER`
-- `BOLT_DB_CONN_PASSWORD`
-- `BOLT_DB_CONN_DBNAME`
-- `BOLT_DB_CONN_DRIVER`
+- `BOLT_DB_HOST`
+- `BOLT_DB_PORT`
+- `BOLT_DB_USER`
+- `BOLT_DB_PASSWORD`
+- `BOLT_DB_NAME`
+- `BOLT_DB_DRIVER`
 
 ### Commands
 
