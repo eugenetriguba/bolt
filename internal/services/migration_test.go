@@ -8,6 +8,7 @@ import (
 	"github.com/eugenetriguba/bolt/internal/bolttest"
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/bolt/internal/sqlparse"
 	"github.com/eugenetriguba/checkmate/assert"
 	"github.com/eugenetriguba/checkmate/check"
 )
@@ -582,8 +583,11 @@ func TestCreateMigration_SequentialVersionIncrementsParsingErr(t *testing.T) {
 func TestApplyMigration_WithTransaction(t *testing.T) {
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
 		ReadUpgradeScriptReturnValue: bolttest.ReadUpgradeScriptReturnValue{
-			ScriptContents: "CREATE TABLE tmp(id INT PRIMARY KEY, id2 INT, id3 INT);",
-			Err:            nil,
+			Script: sqlparse.MigrationScript{
+				Contents: "CREATE TABLE tmp(id INT PRIMARY KEY, id2 INT, id3 INT);",
+				Options:  sqlparse.ExecutionOptions{UseTransaction: true},
+			},
+			Err: nil,
 		},
 	}
 
@@ -609,8 +613,11 @@ func TestApplyMigration_WithTransaction(t *testing.T) {
 func TestApplyMigration_WithoutTransaction(t *testing.T) {
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
 		ReadUpgradeScriptReturnValue: bolttest.ReadUpgradeScriptReturnValue{
-			ScriptContents: "-- bolt: no-transaction\nCREATE TABLE tmp(id INT PRIMARY KEY, id2 INT, id3 INT);",
-			Err:            nil,
+			Script: sqlparse.MigrationScript{
+				Contents: "CREATE TABLE tmp(id INT PRIMARY KEY, id2 INT, id3 INT);",
+				Options:  sqlparse.ExecutionOptions{UseTransaction: false},
+			},
+			Err: nil,
 		},
 	}
 
@@ -637,8 +644,8 @@ func TestApplyMigration_ReadUpgradeScriptErr(t *testing.T) {
 	expectedErr := errors.New("error!")
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
 		ReadUpgradeScriptReturnValue: bolttest.ReadUpgradeScriptReturnValue{
-			ScriptContents: "",
-			Err:            expectedErr,
+			Script: sqlparse.MigrationScript{},
+			Err:    expectedErr,
 		},
 	}
 
@@ -860,8 +867,11 @@ func TestApplyUpToVersion_AppliesMigrations(t *testing.T) {
 func TestRevertMigration_WithTransaction(t *testing.T) {
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
 		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
-			ScriptContents: "DROP TABLE tmp;",
-			Err:            nil,
+			Script: sqlparse.MigrationScript{
+				Contents: "DROP TABLE tmp;",
+				Options:  sqlparse.ExecutionOptions{UseTransaction: true},
+			},
+			Err: nil,
 		},
 	}
 
@@ -887,8 +897,11 @@ func TestRevertMigration_WithTransaction(t *testing.T) {
 func TestRevertMigration_WithoutTransaction(t *testing.T) {
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
 		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
-			ScriptContents: "-- bolt: no-transaction\nDROP TABLE tmp;",
-			Err:            nil,
+			Script: sqlparse.MigrationScript{
+				Contents: "DROP TABLE tmp;",
+				Options:  sqlparse.ExecutionOptions{UseTransaction: false},
+			},
+			Err: nil,
 		},
 	}
 	migrationDbRepo := &bolttest.MockMigrationDBRepo{
@@ -914,8 +927,8 @@ func TestRevertMigration_ReadUpgradeScriptErr(t *testing.T) {
 	expectedErr := errors.New("error!")
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
 		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
-			ScriptContents: "",
-			Err:            expectedErr,
+			Script: sqlparse.MigrationScript{},
+			Err:    expectedErr,
 		},
 	}
 	migrationDbRepo := &bolttest.MockMigrationDBRepo{}

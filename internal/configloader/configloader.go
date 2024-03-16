@@ -71,7 +71,7 @@ func NewConfig() (*Config, error) {
 	cfg := Config{
 		Migrations: MigrationsConfig{
 			DirectoryPath: "migrations",
-			VersionStyle:  VersionStyleSequential,
+			VersionStyle:  VersionStyleTimestamp,
 		},
 	}
 	if !errors.Is(err, ErrConfigFileNotFound) {

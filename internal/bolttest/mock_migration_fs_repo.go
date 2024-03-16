@@ -1,6 +1,9 @@
 package bolttest
 
-import "github.com/eugenetriguba/bolt/internal/models"
+import (
+	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/bolt/internal/sqlparse"
+)
 
 type MockMigrationFsRepo struct {
 	CreateReturnValue              CreateReturnValue
@@ -18,8 +21,8 @@ type CreateReturnValue struct {
 }
 
 type ReadUpgradeScriptReturnValue struct {
-	ScriptContents string
-	Err            error
+	Script sqlparse.MigrationScript
+	Err    error
 }
 
 type ReadDowngradeScriptReturnValue = ReadUpgradeScriptReturnValue
@@ -36,14 +39,14 @@ func (repo *MockMigrationFsRepo) List() (map[string]*models.Migration, error) {
 
 func (repo *MockMigrationFsRepo) ReadUpgradeScript(
 	migration *models.Migration,
-) (string, error) {
+) (sqlparse.MigrationScript, error) {
 	repo.ReadUpgradeScriptCallCount += 1
-	return repo.ReadUpgradeScriptReturnValue.ScriptContents, repo.ReadUpgradeScriptReturnValue.Err
+	return repo.ReadUpgradeScriptReturnValue.Script, repo.ReadUpgradeScriptReturnValue.Err
 }
 
 func (repo *MockMigrationFsRepo) ReadDowngradeScript(
 	migration *models.Migration,
-) (string, error) {
+) (sqlparse.MigrationScript, error) {
 	repo.ReadDowngradeScriptCallCount += 1
-	return repo.ReadDowngradeScriptReturnValue.ScriptContents, repo.ReadDowngradeScriptReturnValue.Err
+	return repo.ReadDowngradeScriptReturnValue.Script, repo.ReadDowngradeScriptReturnValue.Err
 }

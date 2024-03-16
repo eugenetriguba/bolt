@@ -39,7 +39,7 @@ func NewMigrationDBRepo(db storage.DB) (MigrationDBRepo, error) {
 	if !migrationTableExists {
 		_, err := db.Exec(`
 			CREATE TABLE bolt_migrations(
-				version CHARACTER(14) PRIMARY KEY NOT NULL
+				version VARCHAR(255) PRIMARY KEY NOT NULL
 			);
 		`)
 		if err != nil {

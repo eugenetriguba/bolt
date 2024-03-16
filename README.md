@@ -61,7 +61,7 @@ Features:
   - [How Are Migrations Reverted?](#how-are-migrations-reverted)
   - [What are Migration Version Styles?](#what-are-migration-version-styles)
   - [Why can't I change between version styles?](#why-cant-i-change-between-version-styles)
-  - [How is the migration message used by Bolt?](#how-is-the-migration-message-used-by-bolt)
+  - [How is the migration message used?](#how-is-the-migration-message-used)
 
 ## Installation
 
@@ -83,30 +83,38 @@ Run the following command to create your first migration:
 
 ```bash
 $ bolt new -m "my first migration"
+Created migration 20240316145038 - my first migration.
 ```
 
 Upon completion, a migrations directory will be created with the following structure:
 
 ```bash
-migrations/
-└── 001_my_first_migration
-    ├── downgrade.sql
-    └── upgrade.sql
+migrations
+└── 20240316145038_my_first_migration.sql
 
-1 directories, 2 files
+1 directory, 1 file
 ```
 
 Bolt automatically creates the migrations directory and your migration scripts inside it.
 
 ### Writing your migration scripts
 
-Bolt utilizes plain SQL for migration scripts. Each migration directory contains `upgrade.sql` for applying migrations and `downgrade.sql` for reverting them.
+Bolt utilizes plain SQL for migration scripts. Each migration directory contains a comment for the upgrade script portion with `-- migrate:up` and a comment for the downgrade script with `-- migrate:down`.
 
-1. Write the Upgrade Script
+1. Open up `20240316145038_my_first_migration.sql`
 
-Edit `upgrade.sql` with the following SQL command to create a new table:
+You'll see the following template in the file for your migration:
 
 ```sql
+-- migrate:up
+
+-- migrate:down
+```
+
+2. Write your migration script
+
+```sql
+-- migrate:up
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -114,13 +122,7 @@ CREATE TABLE users (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
-```
-
-2. Write the Downgrade Script
-
-Edit `downgrade.sql` with the following SQL command to remove the table:
-
-```sql
+-- migrate:down
 DROP TABLE users;
 ```
 
@@ -166,8 +168,8 @@ Apply your migration, which will execute the `upgrade.sql` script:
 
 ```bash
 $ bolt up
-Applying migration 001_my_first_migration..
-Successfully applied migration 001_my_first_migration!
+Applying migration 20240316145038_my_first_migration..
+Successfully applied migration 20240316145038_my_first_migration!
 ```
 
 ### Checking Migration Status
@@ -177,7 +179,7 @@ To view the status of your migration:
 ```bash
 $ bolt status
 Version           Message               Applied
-001               my_first_migration    X
+20240316145038    my_first_migration    X
 ```
 
 This command displays the migration's version, name, and whether the migration was applied or not.
@@ -208,8 +210,8 @@ To revert your migration:
 
 ```bash
 $ bolt down
-Reverting migration 001_my_first_migration..
-Successfully reverted migration 001_my_first_migration!
+Reverting migration 20240316145038_my_first_migration..
+Successfully reverted migration 20240316145038_my_first_migration!
 ```
 
 ### Verifying Migration Reversion
@@ -231,16 +233,18 @@ bolt_tutorial_db=# \dt
 
 ### Next Steps
 
-Congrats! You've learned the core features of Bolt. If you want learn more, see the [Reference](#reference) or [Explanation](#explanation) section.
+Congrats! You've learned the core features of Bolt. If you want learn more, see the [How-to](#how-to), [Reference](#reference), or [Explanation](#explanation) section.
 
 ## How-to
 
 ### How to execute a migration script without a transaction
 
-In your `upgrade.sql` or `downgrade.sql`, add the following line as the first line of your script:
+In your migration script, add a `transaction:false` option:
 
 ```sql
--- bolt: no-transaction
+-- migrate:up transaction:false
+
+-- migrate:down transaction:false
 ```
 
 ## Reference
@@ -269,11 +273,11 @@ or in any parent directory.
 # path.
 directory_path = "migrations"
 # The migration versioning style you prefer. Supported options
-# are "timestamp" and "sequential". Defaults to "sequential".
+# are "timestamp" and "sequential". Defaults to "timestamp".
 #
 # Note: It is not supported to change migration version styles
 # i.e. you can't have a mix of sequential and timestamp migrations.
-version_style = "sequential"
+version_style = "timestamp"
 
 # Connection parameters for the database Bolt will be
 # applying migrations to. All connection parameters are
@@ -366,9 +370,9 @@ version:
 
 Bolt provides a way for you to customize how your migration scripts are executed if you need something different than the default behavior.
 
-You can do this by adding a comment to the top of your migration script. The comment must be in the following format: `-- bolt: <option>`. The following options are available:
+You can do this by adding onto the `-- migrate:up` or `-- migrate:down` comments with your own execution option. The options must be in the following format: `-- migrate:up <option1> <option2> <...>` or `-- migrate:down <option1> <option2> <...>`. The following options are available:
 
-- `no-transaction`: Execute the migration script without a transaction. By default, every migration script will be attempted to be executed within a transaction, however, some SQL commands cannot be executed within a transaction so you'll need to opt out of that behavior in those cases.
+- `transaction:false`: Execute the migration script without a transaction. By default, every migration script will be attempted to be executed within a transaction, however, some SQL commands cannot be executed within a transaction so you'll need to opt out of that behavior in those cases.
 
 ### Version Styles
 
@@ -380,7 +384,7 @@ The following version styles are supported:
 
 ### How Are Migration Scripts Executed?
 
-Bolt executes upgrade and downgrade migration scripts in a transaction. This ensures that if any errors occur during the execution of any migration script, the transaction will be rolled back and the migration will be marked as failed. Bolt will then exit with an error code and output what error has occurred to standard error.
+Bolt executes upgrade and downgrade migration scripts in a transaction. This ensures that if any errors occur during the execution of any migration script, the transaction will be rolled back and the migration will be marked as failed. Bolt will then exit with an error code and output what error has occurred to standard error. However, do note that some databases, like MySQL, commit certain DDL statements immediately even if you're in a transaction.
 
 ### How Does Bolt Know What Migrations Have Been Applied?
 
@@ -388,11 +392,11 @@ Bolt keeps track of which migrations have been applied to your database by creat
 
 ### How Are Migrations Applied?
 
-When you run `bolt up`, Bolt will look at your local migration scripts and compares the version part of the migration directory names to the versions that have been inserted into the `bolt_migrations` table. Any versions that aren't in the table will be applied in order, starting with the oldest migration. Applying a migration entails executing the `upgrade.sql` script in a transaction and inserting in the migration's version into the `bolt_migrations` table.
+When you run `bolt up`, Bolt will look at your local migration scripts and compares the version part of the migration directory names to the versions that have been inserted into the `bolt_migrations` table. Any versions that aren't in the table will be applied in order, starting with the oldest migration. Applying a migration entails executing the `-- migrate:up` portion of the script in a transaction and inserting in the migration's version into the `bolt_migrations` table.
 
 ### How Are Migrations Reverted?
 
-When you run `bolt down`, Bolt will look at the `bolt_migrations` table and compare the versions to the versions of your local migration scripts. Any versions that are in the table but not in your local migration scripts will be reverted in order, starting with the newest migration. Reverting a migration entails executing the `downgrade.sql` script in a transaction and removing the migration's version from the `bolt_migrations` table.
+When you run `bolt down`, Bolt will look at the `bolt_migrations` table and compare the versions to the versions of your local migration scripts. Any versions that are in the table but not in your local migration scripts will be reverted in order, starting with the newest migration. Reverting a migration entails executing the `-- migrate:down` portion of the script in a transaction and removing the migration's version from the `bolt_migrations` table.
 
 ### What are Migration Version Styles?
 
@@ -408,6 +412,8 @@ Sequential versions are incrementing integers. When you create a migration, it'l
 
 The main reason that switching back and forth between "sequential" and "timestamp" versions is not supported is because Bolt will no longer know how to properly sort your migrations in the right order (and therefore, apply or revert them in the right order). If you've been using sequential migrations, such as "001" and "002", and then move over to timestamp migrations, such as "20200101000000", Bolt won't know how to order these correctly when both exist. Furthermore, because the "version" is parsed and sorted according to the version style that is configured, the parsing will fail if a mix of version styles are used.
 
-### How is the migration message used by Bolt?
+This means that if you wanted to switch version styles, you could do it manually by updating your local migrations to use the new version style and update the entries in `bolt_migrations` to match, but there is no tooling support for doing this change.
 
-All migrations are created on the local filesystem in the format `<version>_<message>`. Bolt uses the `<version>` part of the name for keeping track of the migrations and how they should be applied or reverted. The `<message>` part is purely informational so you know what that migration is for. Bolt does not use or store it anywhere. You may alter this message whenever you'd like as long as the format is kept consistent (`_` after the `<version>`). However, the version should not be directly manipulated.
+### How is the migration message used?
+
+All migrations are created on the local filesystem in the format `<version>_<message>`. Bolt uses the `<version>` part of the name for keeping track of the migrations and how they should be applied or reverted. The `<message>` part is purely informational so you know what that migration is for.

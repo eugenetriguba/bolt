@@ -10,6 +10,7 @@ import (
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
+	"github.com/eugenetriguba/bolt/internal/sqlparse"
 )
 
 type ErrIsNotDir struct {
@@ -26,8 +27,8 @@ func (e *ErrIsNotDir) Error() string {
 type MigrationFsRepo interface {
 	Create(migration *models.Migration) error
 	List() (map[string]*models.Migration, error)
-	ReadUpgradeScript(migration *models.Migration) (string, error)
-	ReadDowngradeScript(migration *models.Migration) (string, error)
+	ReadUpgradeScript(migration *models.Migration) (sqlparse.MigrationScript, error)
+	ReadDowngradeScript(migration *models.Migration) (sqlparse.MigrationScript, error)
 }
 
 type migrationFsRepo struct {
@@ -61,23 +62,15 @@ func NewMigrationFsRepo(
 }
 
 func (mr migrationFsRepo) Create(migration *models.Migration) error {
-	newMigrationDir := filepath.Join(mr.migrationsDirPath, mr.migrationDirname(migration))
-
-	err := os.Mkdir(newMigrationDir, 0755)
+	newMigrationPath := filepath.Join(mr.migrationsDirPath, migration.Name()+".sql")
+	file, err := os.Create(newMigrationPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create file at %s: %w", newMigrationPath, err)
 	}
-
-	_, err = os.Create(filepath.Join(newMigrationDir, "upgrade.sql"))
+	_, err = file.WriteString("-- migrate:up\n\n-- migrate:down\n")
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to write template to new migration script: %w", err)
 	}
-
-	_, err = os.Create(filepath.Join(newMigrationDir, "downgrade.sql"))
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -108,31 +101,42 @@ func dirEntryToMigration(entry fs.DirEntry) (*models.Migration, error) {
 			entry.Name(),
 		)
 	}
+	version := parts[0]
+	message := strings.TrimSuffix(parts[1], filepath.Ext(parts[1])) // Remove .sql
 	return &models.Migration{
-		Version: parts[0],
-		Message: parts[1],
+		Version: version,
+		Message: message,
 		Applied: false,
 	}, nil
 }
 
-func (mr migrationFsRepo) ReadUpgradeScript(migration *models.Migration) (string, error) {
-	upgradeScriptPath := filepath.Join(
+func (mr migrationFsRepo) ReadUpgradeScript(migration *models.Migration) (sqlparse.MigrationScript, error) {
+	scriptPath := filepath.Join(
 		mr.migrationsDirPath,
-		mr.migrationDirname(migration),
-		"upgrade.sql",
+		migration.Name()+".sql",
 	)
-	return mr.readScriptContents(upgradeScriptPath)
+	upgradeScript, _, err := mr.getMigrationScripts(scriptPath)
+	return upgradeScript, err
 }
 
 func (mr migrationFsRepo) ReadDowngradeScript(
 	migration *models.Migration,
-) (string, error) {
-	downgradeScriptPath := filepath.Join(
+) (sqlparse.MigrationScript, error) {
+	scriptPath := filepath.Join(
 		mr.migrationsDirPath,
-		mr.migrationDirname(migration),
-		"downgrade.sql",
+		migration.Name()+".sql",
 	)
-	return mr.readScriptContents(downgradeScriptPath)
+	_, downgradeScript, err := mr.getMigrationScripts(scriptPath)
+	return downgradeScript, err
+}
+
+func (mr migrationFsRepo) getMigrationScripts(scriptPath string) (sqlparse.MigrationScript, sqlparse.MigrationScript, error) {
+	scriptContents, err := mr.readScriptContents(scriptPath)
+	if err != nil {
+		return sqlparse.MigrationScript{}, sqlparse.MigrationScript{}, fmt.Errorf("unable to read %s script: %w", scriptPath, err)
+	}
+	sqlParser := sqlparse.NewSqlParser()
+	return sqlParser.Parse(strings.NewReader(scriptContents))
 }
 
 func (mr migrationFsRepo) readScriptContents(scriptPath string) (string, error) {
@@ -142,19 +146,4 @@ func (mr migrationFsRepo) readScriptContents(scriptPath string) (string, error) 
 	}
 
 	return string(contents), nil
-}
-
-// migrationDirname creates the directory name that
-// should be used for this migration.
-func (mr migrationFsRepo) migrationDirname(migration *models.Migration) string {
-	return fmt.Sprintf("%s_%s", migration.Version, mr.normalizeMessage(migration))
-}
-
-// normalizeMessage normalizes the Message of a migration
-// to be filesystem friendly.
-func (mr migrationFsRepo) normalizeMessage(migration *models.Migration) string {
-	message := strings.ToLower(migration.Message)
-	message = strings.TrimSpace(message)
-	message = strings.ReplaceAll(message, " ", "_")
-	return message
 }

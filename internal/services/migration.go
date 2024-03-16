@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/eugenetriguba/bolt/internal/configloader"
 	"github.com/eugenetriguba/bolt/internal/models"
 	"github.com/eugenetriguba/bolt/internal/output"
 	"github.com/eugenetriguba/bolt/internal/repositories"
-	"github.com/eugenetriguba/bolt/internal/sqlparse"
 )
 
 type MigrationService struct {
@@ -118,21 +116,15 @@ func (ms MigrationService) ApplyMigration(migration *models.Migration) error {
 		),
 	)
 
-	scriptContents, err := ms.fsRepo.ReadUpgradeScript(migration)
+	upgradeScript, err := ms.fsRepo.ReadUpgradeScript(migration)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to read upgrade script: %w", err)
 	}
 
-	sqlParser := sqlparse.NewSqlParser()
-	execOptions, err := sqlParser.Parse(strings.NewReader(scriptContents))
-	if err != nil {
-		return fmt.Errorf("unable to parse sql file for upgrade script: %w", err)
-	}
-
-	if execOptions.UseTransaction {
-		err = ms.dbRepo.ApplyWithTx(scriptContents, migration)
+	if upgradeScript.Options.UseTransaction {
+		err = ms.dbRepo.ApplyWithTx(upgradeScript.Contents, migration)
 	} else {
-		err = ms.dbRepo.Apply(scriptContents, migration)
+		err = ms.dbRepo.Apply(upgradeScript.Contents, migration)
 	}
 
 	if err != nil {
@@ -225,21 +217,15 @@ func (ms MigrationService) RevertMigration(migration *models.Migration) error {
 			migration.Message,
 		),
 	)
-	scriptContents, err := ms.fsRepo.ReadDowngradeScript(migration)
+	downgradeScript, err := ms.fsRepo.ReadDowngradeScript(migration)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to read downgrade script: %w", err)
 	}
 
-	sqlParser := sqlparse.NewSqlParser()
-	execOptions, err := sqlParser.Parse(strings.NewReader(scriptContents))
-	if err != nil {
-		return fmt.Errorf("unable to parse sql file for downgrade script: %w", err)
-	}
-
-	if execOptions.UseTransaction {
-		err = ms.dbRepo.RevertWithTx(scriptContents, migration)
+	if downgradeScript.Options.UseTransaction {
+		err = ms.dbRepo.RevertWithTx(downgradeScript.Contents, migration)
 	} else {
-		err = ms.dbRepo.Revert(scriptContents, migration)
+		err = ms.dbRepo.Revert(downgradeScript.Contents, migration)
 	}
 
 	if err != nil {

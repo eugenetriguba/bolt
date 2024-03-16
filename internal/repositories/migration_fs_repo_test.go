@@ -59,26 +59,23 @@ func TestCreate_SuccessfullyCreated(t *testing.T) {
 	err = repo.Create(migration)
 	assert.Nil(t, err)
 
-	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
-	assertFileExists(t, filepath.Join(tempDir, migrationDirName))
-	assertFileExists(t, filepath.Join(tempDir, migrationDirName, "upgrade.sql"))
-	assertFileExists(t, filepath.Join(tempDir, migrationDirName, "downgrade.sql"))
+	assertFileExists(t, filepath.Join(tempDir, fmt.Sprintf("%s.sql", migration.Name())))
 }
 
-func TestCreate_FailsToCreateDir(t *testing.T) {
+func TestCreate_FailsToCreateMigration(t *testing.T) {
 	tempDir := t.TempDir()
-	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: tempDir}
-	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
+	repo, err := repositories.NewMigrationFsRepo(
+		&configloader.MigrationsConfig{DirectoryPath: tempDir},
+	)
 	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "add users table")
-	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
-	_, err = os.Create(filepath.Join(tempDir, migrationDirName))
+	_, err = os.OpenFile(filepath.Join(tempDir, fmt.Sprintf("%s.sql", migration.Name())), os.O_CREATE, 0000)
 	assert.Nil(t, err)
 
 	err = repo.Create(migration)
 
 	assert.NotNil(t, err)
-	assert.ErrorContains(t, err, "file exists")
+	assert.ErrorContains(t, err, "unable to create file")
 }
 
 func TestReadUpgradeScript_SuccessfullyRead(t *testing.T) {
@@ -91,17 +88,17 @@ func TestReadUpgradeScript_SuccessfullyRead(t *testing.T) {
 	err = repo.Create(migration)
 	assert.Nil(t, err)
 
-	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
-	expectedUpgradeScriptContents := []byte("CREATE TABLE users(id int PRIMARY KEY);")
+	migrationName := fmt.Sprintf("%s.sql", migration.Name())
+	expectedUpgradeScriptContents := "CREATE TABLE users(id int PRIMARY KEY);\n"
 	os.WriteFile(
-		filepath.Join(tempDir, migrationDirName, "upgrade.sql"),
-		expectedUpgradeScriptContents,
+		filepath.Join(tempDir, migrationName),
+		[]byte("-- migrate:up\n"+expectedUpgradeScriptContents),
 		0755,
 	)
 
-	upgradeScriptContents, err := repo.ReadUpgradeScript(migration)
+	upgradeScript, err := repo.ReadUpgradeScript(migration)
 	assert.Nil(t, err)
-	assert.Equal(t, upgradeScriptContents, string(expectedUpgradeScriptContents))
+	assert.Equal(t, upgradeScript.Contents, string(expectedUpgradeScriptContents))
 }
 
 func TestReadUpgradeScript_FileDoesNotExist(t *testing.T) {
@@ -126,17 +123,17 @@ func TestReadDowngradeScript_SuccessfullyRead(t *testing.T) {
 	err = repo.Create(migration)
 	assert.Nil(t, err)
 
-	migrationDirName := fmt.Sprintf("%s_add_users_table", migration.Version)
-	expectedDowngradeScriptContents := []byte("DROP TABLE users;")
+	migrationName := fmt.Sprintf("%s.sql", migration.Name())
+	expectedDowngradeScriptContents := "DROP TABLE users;\n"
 	os.WriteFile(
-		filepath.Join(tempDir, migrationDirName, "downgrade.sql"),
-		expectedDowngradeScriptContents,
+		filepath.Join(tempDir, migrationName),
+		[]byte("-- migrate:down\n"+expectedDowngradeScriptContents),
 		0755,
 	)
 
-	downgradeScriptContents, err := repo.ReadDowngradeScript(migration)
+	downgradeScript, err := repo.ReadDowngradeScript(migration)
 	assert.Nil(t, err)
-	assert.Equal(t, downgradeScriptContents, string(expectedDowngradeScriptContents))
+	assert.Equal(t, downgradeScript.Contents, string(expectedDowngradeScriptContents))
 }
 
 func TestReadDowngradeScript_FileDoesNotExist(t *testing.T) {

@@ -1,7 +1,6 @@
 package models_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -34,6 +33,33 @@ func TestNewSequentialMigration(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
-	m := models.NewSequentialMigration(1, "test message")
-	check.Equal(t, m.Name(), fmt.Sprintf("%s_%s", m.Version, m.Message))
+	type test struct {
+		migration    *models.Migration
+		expectedName string
+	}
+
+	testCases := []test{
+		// Underscores are used to separate version and message.
+		{
+			migration:    models.NewSequentialMigration(1, "test_message"),
+			expectedName: "001_test_message",
+		},
+		{
+			migration:    models.NewTimestampMigration(time.Date(1234, 1, 2, 3, 4, 5, 6, time.UTC), "test_message"),
+			expectedName: "12340102030405_test_message",
+		},
+		// Leading/Trailing spaces trimmed, lowercased, and spaces converted to underscores.
+		{
+			migration:    models.NewSequentialMigration(1, "  teST mesSAGE  "),
+			expectedName: "001_test_message",
+		},
+		{
+			migration:    models.NewTimestampMigration(time.Date(1234, 1, 2, 3, 4, 5, 6, time.UTC), "  teST mesSAGE  "),
+			expectedName: "12340102030405_test_message",
+		},
+	}
+
+	for _, tc := range testCases {
+		check.Equal(t, tc.migration.Name(), tc.expectedName)
+	}
 }

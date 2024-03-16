@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Migrations are now a single file with an upgrade and downgrade script delineated by a `-- migrate:up` or `--migrate:down` comment instead of the prior approach where the migration was a directory with a `upgrade.sql` and `downgrade.sql` file within it.
+
+- Default version style is now timestamp.
+
+- `bolt_migrations` `version` column is now a `VARCHAR(255)` instead of `CHARACTER(14)`.
+
 ## [0.7.0] - 2024-03-14
 
 ### Changed

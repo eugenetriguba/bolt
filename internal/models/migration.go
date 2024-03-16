@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -31,6 +32,16 @@ func NewSequentialMigration(version uint64, message string) *Migration {
 	}
 }
 
+// NormalizedMessage gives back the Message in lowercase,
+// leading and trailing whitespace removed, and spaces
+// replaced with underscores.
+func (m Migration) NormalizedMessage() string {
+	message := strings.ToLower(m.Message)
+	message = strings.TrimSpace(message)
+	message = strings.ReplaceAll(message, " ", "_")
+	return message
+}
+
 func (m *Migration) Name() string {
-	return fmt.Sprintf("%s_%s", m.Version, m.Message)
+	return fmt.Sprintf("%s_%s", m.Version, m.NormalizedMessage())
 }
