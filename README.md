@@ -16,12 +16,14 @@
 
 Bolt is a command-line tool designed to simplify and streamline your database migration process.
 
-🌟 Key Features:
-- **SQL-Powered Flexibility**: 🧩 - Write your migration scripts in plain SQL.
+It is distributed as a standalone binary, making it easy to run anywhere without having to setup any tooling, and it is language indepenent. It doesn't matter what programming language you're using, you can use Bolt for any project you have.
 
-- **Bidirectional Migrations**: 🔀 - With support for both 'up' (migrating) and 'down' (downgrading) migrations, Bolt provides complete control over your database versions.
-
-- **Time-Travel with Ease**: ⏳ - Migrate or downgrade to any specific point in time. Bolt allows you to specify a specific migration version to migrate or downgrade to, allowing you to easily time-travel to any point in your database's history.
+Features:
+- Schema migrations are written in plain SQL.
+- Migrations can be versioned sequentially or by creation timestamp.
+- All migrations run in transactions by default.
+- Supports up and down migrations and jumping to any particular schema version.
+- Supports PostgreSQL, MySQL, SQL Server, and SQLite3.
 
 ## Table of Contents
 
