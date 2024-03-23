@@ -67,7 +67,14 @@ It is distributed as a standalone binary, making it easy to run anywhere without
 
 ## Installation
 
-To install Bolt, run the following command:
+### macOS
+
+```bash
+$ brew tap eugenetriguba/homebrew-bolt
+$ brew install bolt
+```
+
+### With Go install
 
 ```bash
 $ go install github.com/eugenetriguba/bolt/cmd/bolt@latest
