@@ -1,0 +1,17 @@
+name: Bump Homebrew
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  homebrew:
+    name: Bump Homebrew formula
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: bolt
+          homebrew-tap: eugenetriguba/homebrew-bolt
+        env:
+          COMMITTER_TOKEN: ${{ secrets.RELEASE_TOKEN }}

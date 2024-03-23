@@ -9,7 +9,7 @@ permissions:
   packages: write
 
 jobs:
-  release:
+  release-go-binary:
     name: Release Go Binary
     runs-on: ubuntu-22.04
     strategy:
@@ -31,4 +31,3 @@ jobs:
         project_path: "./cmd/bolt"
         sha256sum: true
         binary_name: "bolt"
-
