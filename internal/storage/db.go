@@ -36,7 +36,12 @@ var (
 	ErrUnableToConnect   = errors.New("unable to open connection to database")
 	ErrUnsupportedDriver = fmt.Errorf(
 		"unsupported driver, supported drivers are %s",
-		[]string{postgresqlDriverName, mysqlDriverName, mssqlDriverName, sqliteDriverName},
+		[]string{
+			postgresqlDriverName,
+			mysqlDriverName,
+			mssqlDriverName,
+			sqliteDriverName,
+		},
 	)
 )
 

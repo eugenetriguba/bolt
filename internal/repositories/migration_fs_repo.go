@@ -13,6 +13,8 @@ import (
 	"github.com/eugenetriguba/bolt/internal/sqlparse"
 )
 
+var ErrMigrationVersionConflict = errors.New("migration version conflict")
+
 type ErrIsNotDir struct {
 	path string
 }
@@ -86,6 +88,15 @@ func (mr migrationFsRepo) List() (map[string]*models.Migration, error) {
 		if err != nil {
 			return nil, err
 		}
+		_, exists := migrations[migration.Version]
+		if exists {
+			return nil, fmt.Errorf(
+				"%w: a local migration file with version %s already exists",
+				ErrMigrationVersionConflict,
+				migration.Version,
+			)
+		}
+
 		migrations[migration.Version] = migration
 	}
 
@@ -110,7 +121,9 @@ func dirEntryToMigration(entry fs.DirEntry) (*models.Migration, error) {
 	}, nil
 }
 
-func (mr migrationFsRepo) ReadUpgradeScript(migration *models.Migration) (sqlparse.MigrationScript, error) {
+func (mr migrationFsRepo) ReadUpgradeScript(
+	migration *models.Migration,
+) (sqlparse.MigrationScript, error) {
 	scriptPath := filepath.Join(
 		mr.migrationsDirPath,
 		migration.Name()+".sql",
@@ -130,10 +143,16 @@ func (mr migrationFsRepo) ReadDowngradeScript(
 	return downgradeScript, err
 }
 
-func (mr migrationFsRepo) getMigrationScripts(scriptPath string) (sqlparse.MigrationScript, sqlparse.MigrationScript, error) {
+func (mr migrationFsRepo) getMigrationScripts(
+	scriptPath string,
+) (sqlparse.MigrationScript, sqlparse.MigrationScript, error) {
 	scriptContents, err := mr.readScriptContents(scriptPath)
 	if err != nil {
-		return sqlparse.MigrationScript{}, sqlparse.MigrationScript{}, fmt.Errorf("unable to read %s script: %w", scriptPath, err)
+		return sqlparse.MigrationScript{}, sqlparse.MigrationScript{}, fmt.Errorf(
+			"unable to read %s script: %w",
+			scriptPath,
+			err,
+		)
 	}
 	sqlParser := sqlparse.NewSqlParser()
 	return sqlParser.Parse(strings.NewReader(scriptContents))

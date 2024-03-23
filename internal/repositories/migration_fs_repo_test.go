@@ -69,7 +69,11 @@ func TestCreate_FailsToCreateMigration(t *testing.T) {
 	)
 	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "add users table")
-	_, err = os.OpenFile(filepath.Join(tempDir, fmt.Sprintf("%s.sql", migration.Name())), os.O_CREATE, 0000)
+	_, err = os.OpenFile(
+		filepath.Join(tempDir, fmt.Sprintf("%s.sql", migration.Name())),
+		os.O_CREATE,
+		0000,
+	)
 	assert.Nil(t, err)
 
 	err = repo.Create(migration)
@@ -203,5 +207,27 @@ func TestList_InvalidMigrationName(t *testing.T) {
 		t,
 		err,
 		"expected a migration directory of the format <version>_<message>",
+	)
+}
+
+func TestList_DuplicateMigrationVersion(t *testing.T) {
+	migrationsDir := filepath.Join(t.TempDir(), "migrations")
+	migrationsConfig := configloader.MigrationsConfig{DirectoryPath: migrationsDir}
+	repo, err := repositories.NewMigrationFsRepo(&migrationsConfig)
+	assert.Nil(t, err)
+	migration1 := models.NewSequentialMigration(1, "migration_1")
+	migration2 := models.NewSequentialMigration(1, "migration_2")
+	err = repo.Create(migration1)
+	assert.Nil(t, err)
+	repo.Create(migration2)
+	assert.Nil(t, err)
+
+	_, err = repo.List()
+
+	assert.ErrorIs(t, err, repositories.ErrMigrationVersionConflict)
+	assert.ErrorContains(
+		t,
+		err,
+		"a local migration file with version 001 already exists",
 	)
 }

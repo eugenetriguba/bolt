@@ -45,7 +45,10 @@ func TestName(t *testing.T) {
 			expectedName: "001_test_message",
 		},
 		{
-			migration:    models.NewTimestampMigration(time.Date(1234, 1, 2, 3, 4, 5, 6, time.UTC), "test_message"),
+			migration: models.NewTimestampMigration(
+				time.Date(1234, 1, 2, 3, 4, 5, 6, time.UTC),
+				"test_message",
+			),
 			expectedName: "12340102030405_test_message",
 		},
 		// Leading/Trailing spaces trimmed, lowercased, and spaces converted to underscores.
@@ -54,7 +57,10 @@ func TestName(t *testing.T) {
 			expectedName: "001_test_message",
 		},
 		{
-			migration:    models.NewTimestampMigration(time.Date(1234, 1, 2, 3, 4, 5, 6, time.UTC), "  teST mesSAGE  "),
+			migration: models.NewTimestampMigration(
+				time.Date(1234, 1, 2, 3, 4, 5, 6, time.UTC),
+				"  teST mesSAGE  ",
+			),
 			expectedName: "12340102030405_test_message",
 		},
 	}

@@ -182,7 +182,9 @@ func TestSqlParser_Parse(t *testing.T) {
 
 	for _, tc := range testCases {
 		sqlParser := sqlparse.NewSqlParser()
-		upgradeScript, downgradeScript, err := sqlParser.Parse(strings.NewReader(tc.migration))
+		upgradeScript, downgradeScript, err := sqlParser.Parse(
+			strings.NewReader(tc.migration),
+		)
 		assert.Nil(t, err)
 		check.DeepEqual(t, upgradeScript, tc.expectedUpgradeScript)
 		check.DeepEqual(t, downgradeScript, tc.expectedDowngradeScript)

@@ -274,7 +274,11 @@ func (ms MigrationService) getCurrentSequentialMigrationVersion() (uint64, error
 		return 0, fmt.Errorf("unable to list out local filesystem migrations: %w", err)
 	}
 
-	migrations, err := ms.combineMigrations(localMigrations, map[string]*models.Migration{}, SortOrderDesc)
+	migrations, err := ms.combineMigrations(
+		localMigrations,
+		map[string]*models.Migration{},
+		SortOrderDesc,
+	)
 	if err != nil {
 		return 0, err
 	}

@@ -67,7 +67,10 @@ func (sp *sqlParser) Parse(reader io.Reader) (MigrationScript, MigrationScript, 
 	}
 
 	if err := scanner.Err(); err != nil {
-		return MigrationScript{}, MigrationScript{}, fmt.Errorf("parsing sql file encountered an error: %w", err)
+		return MigrationScript{}, MigrationScript{}, fmt.Errorf(
+			"parsing sql file encountered an error: %w",
+			err,
+		)
 	}
 
 	return upgradeScript, downgradeScript, nil
