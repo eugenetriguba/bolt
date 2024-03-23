@@ -24,6 +24,7 @@ It is distributed as a standalone binary, making it easy to run anywhere without
 - [Installation](#installation)
   - [Go install](#go-install)
   - [Homebrew](#homebrew)
+  - [Download Pre-compiled Binary](#download-pre-compiled-binary)
 - [Tutorial](#tutorial)
   - [Creating your first migration](#creating-your-first-migration)
   - [Writing your migration scripts](#writing-your-migration-scripts)
@@ -83,6 +84,17 @@ This will install Bolt to your `$GOBIN` directory. Make sure that `$GOBIN` is in
 $ brew tap eugenetriguba/homebrew-bolt
 $ brew install bolt
 ```
+
+### Download Pre-compiled Binary
+
+If you visit the [Releases page](https://github.com/eugenetriguba/bolt/releases), pre-compiled binaries are created with every release for the following operating systems and architectures:
+- linux/386
+- linux/amd64
+- linux/arm64
+- windows/386
+- windows/amd64
+- darwin/amd64
+- darwin/arm64
 
 ## Tutorial
 
