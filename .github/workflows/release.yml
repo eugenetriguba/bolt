@@ -32,7 +32,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        project_path: "./cmd/bolt/bolt.go"
+        project_path: "./cmd/bolt"
         sha256sum: true
         binary_name: "bolt"
 
