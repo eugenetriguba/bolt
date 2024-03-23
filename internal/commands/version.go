@@ -32,7 +32,7 @@ func (cmd *VersionCmd) Execute(
 	_ ...interface{},
 ) subcommands.ExitStatus {
 	consoleOutputter := output.NewConsoleOutputter()
-	err := consoleOutputter.Output("bolt v0.8.0")
+	err := consoleOutputter.Output("bolt v0.8.1")
 	if err != nil {
 		consoleOutputter.Error(err)
 		return subcommands.ExitFailure
