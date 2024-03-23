@@ -22,6 +22,8 @@ It is distributed as a standalone binary, making it easy to run anywhere without
 
 - [Features](#features)
 - [Installation](#installation)
+  - [Go install](#go-install)
+  - [Homebrew](#homebrew)
 - [Tutorial](#tutorial)
   - [Creating your first migration](#creating-your-first-migration)
   - [Writing your migration scripts](#writing-your-migration-scripts)
@@ -67,20 +69,20 @@ It is distributed as a standalone binary, making it easy to run anywhere without
 
 ## Installation
 
-### macOS
-
-```bash
-$ brew tap eugenetriguba/homebrew-bolt
-$ brew install bolt
-```
-
-### With Go install
+### Go install
 
 ```bash
 $ go install github.com/eugenetriguba/bolt/cmd/bolt@latest
 ```
 
 This will install Bolt to your `$GOBIN` directory. Make sure that `$GOBIN` is in your `$PATH`.
+
+### Homebrew
+
+```bash
+$ brew tap eugenetriguba/homebrew-bolt
+$ brew install bolt
+```
 
 ## Tutorial
 
