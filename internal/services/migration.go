@@ -108,13 +108,8 @@ func (ms MigrationService) ApplyUpToVersion(version string) error {
 }
 
 func (ms MigrationService) ApplyMigration(migration *models.Migration) error {
-	ms.outputter.Output(
-		fmt.Sprintf(
-			"Applying migration %s_%s..",
-			migration.Version,
-			migration.Message,
-		),
-	)
+	ms.outputter.Output(fmt.Sprintf("Applying migration %s..", migration.Name()))
+	startTime := time.Now()
 
 	upgradeScript, err := ms.fsRepo.ReadUpgradeScript(migration)
 	if err != nil {
@@ -133,9 +128,9 @@ func (ms MigrationService) ApplyMigration(migration *models.Migration) error {
 
 	ms.outputter.Output(
 		fmt.Sprintf(
-			"Successfully applied migration %s_%s!",
-			migration.Version,
-			migration.Message,
+			"Successfully applied migration %s in %s!",
+			migration.Name(),
+			time.Since(startTime),
 		),
 	)
 
@@ -210,13 +205,9 @@ func (ms MigrationService) RevertDownToVersion(version string) error {
 }
 
 func (ms MigrationService) RevertMigration(migration *models.Migration) error {
-	ms.outputter.Output(
-		fmt.Sprintf(
-			"Reverting migration %s_%s..",
-			migration.Version,
-			migration.Message,
-		),
-	)
+	ms.outputter.Output(fmt.Sprintf("Reverting migration %s..", migration.Name()))
+	startTime := time.Now()
+
 	downgradeScript, err := ms.fsRepo.ReadDowngradeScript(migration)
 	if err != nil {
 		return fmt.Errorf("unable to read downgrade script: %w", err)
@@ -234,9 +225,9 @@ func (ms MigrationService) RevertMigration(migration *models.Migration) error {
 
 	ms.outputter.Output(
 		fmt.Sprintf(
-			"Successfully reverted migration %s_%s!",
-			migration.Version,
-			migration.Message,
+			"Successfully reverted migration %s in %s!",
+			migration.Name(),
+			time.Since(startTime),
 		),
 	)
 
