@@ -68,11 +68,8 @@ jobs:
           name: coverage-sqlite3
           path: .
 
-      - name: Install gocovmerge
-        run: go install github.com/wadey/gocovmerge@b5bfa59ec0adc420475f97f89b58045c721d761c
-
       - name: Combine Coverage Reports
-        run: gocovmerge coverage-*.out > coverage.combined.out
+        run: go run github.com/wadey/gocovmerge@b5bfa59ec0adc420475f97f89b58045c721d761c coverage-*.out > coverage.combined.out
    
       - name: Show Combined Coverage
         run: go tool cover -func=coverage.combined.out
