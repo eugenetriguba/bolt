@@ -32,7 +32,7 @@ jobs:
         done
         echo "Database is ready."
     - name: Run Tests
-      run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -p 1 -tags "${{ matrix.db.name }}" -coverprofile=coverage-${{ matrix.db.name }}.out ./...
+      run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -p 1 -tags "${{ matrix.db.name }}" -covermode=count -coverprofile=coverage-${{ matrix.db.name }}.out ./...
 
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v4
