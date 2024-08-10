@@ -26,6 +26,11 @@ jobs:
       if: matrix.db.name != 'sqlite3'
       run: |
         env $(cat ".env.${{ matrix.db.name }}" | xargs) docker compose -f "docker-compose.${{ matrix.db.name }}.yml" up -d
+        echo "Waiting for the database to be ready..."
+        until [ "`docker inspect -f {{.State.Health.Status}} bolt_${{ matrix.db.name }}_db`" == "healthy" ]; do
+          sleep 5;
+        done
+        echo "Database is ready."
     - name: Run Tests
       run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -p 1 -tags "${{ matrix.db.name }}" -coverprofile=coverage-${{ matrix.db.name }}.out ./...
 
