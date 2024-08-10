@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: ["main", "dev"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "dev"]
+    branches: ["main"]
 
 jobs:
   run-tests:
@@ -26,5 +26,66 @@ jobs:
       if: matrix.db.name != 'sqlite3'
       run: |
         env $(cat ".env.${{ matrix.db.name }}" | xargs) docker compose -f "docker-compose.${{ matrix.db.name }}.yml" up -d
+        echo "Waiting for the database to be ready..."
+        until [ "`docker inspect -f {{.State.Health.Status}} bolt_${{ matrix.db.name }}_db`" == "healthy" ]; do
+          sleep 5;
+        done
+        echo "Database is ready."
     - name: Run Tests
-      run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -p 1 -tags "${{ matrix.db.name }}" -cover ./...
+      run: env $(cat ".env.${{ matrix.db.name }}" | xargs) go test -p 1 -tags "${{ matrix.db.name }}" -covermode=count -coverprofile=coverage-${{ matrix.db.name }}.out ./...
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ matrix.db.name }}
+        path: coverage-${{ matrix.db.name }}.out
+
+  combine-coverage-reports-and-upload:
+    needs: [run-tests]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Download Coverage Reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-postgresql
+          path: .
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-mysql
+          path: .
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-mssql
+          path: .
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-sqlite3
+          path: .
+
+      - name: Combine Coverage Reports
+        run: go run github.com/wadey/gocovmerge@b5bfa59ec0adc420475f97f89b58045c721d761c coverage-*.out > coverage.combined.out
+   
+      - name: Show Combined Coverage
+        run: go tool cover -func=coverage.combined.out
+
+      - name: Upload Combined Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-coverage
+          path: coverage.combined.out
+      
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.combined.out
+          flags: unittests
+          name: bolt-coverage
+          fail_ci_if_error: true
+

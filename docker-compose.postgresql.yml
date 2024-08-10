@@ -3,7 +3,7 @@ version: "3.8"
 services:
   postgres_db:
     image: postgres:16.1-alpine3.19
-    container_name: bolt_postgres_db
+    container_name: bolt_postgresql_db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
