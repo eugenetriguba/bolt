@@ -69,7 +69,7 @@ jobs:
           path: .
 
       - name: Combine Coverage Reports
-        run: cat coverage-*.out > coverage.combined.out
+        run: cat coverage-*.out | grep -v '^mode:' > coverage.combined.out
    
       - name: Show Combined Coverage
         run: go tool cover -func=coverage.combined.out
