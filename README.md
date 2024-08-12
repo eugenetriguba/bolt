@@ -367,7 +367,7 @@ up [-version|-v]:
 #### `bolt down`
 
 ```bash
-$ bolt help up
+$ bolt help down
 down [-version|-v]:
 	Downgrade migrations against the database
     -v string
