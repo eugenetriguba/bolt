@@ -181,7 +181,7 @@ $ touch bolt.toml
 ```toml
 [database]
 host = "localhost"
-port = 5432
+port = "5432"
 user = "bolt_user"
 password = "bolt_password"
 dbname = "bolt_tutorial_db"
@@ -367,7 +367,7 @@ up [-version|-v]:
 #### `bolt down`
 
 ```bash
-$ bolt help up
+$ bolt help down
 down [-version|-v]:
 	Downgrade migrations against the database
     -v string
