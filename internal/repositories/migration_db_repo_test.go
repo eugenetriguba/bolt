@@ -16,7 +16,7 @@ func TestNewMigrationDBRepo_CreatesTable(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, exists)
 
-	_, err = repositories.NewMigrationDBRepo(testdb)
+	_, err = repositories.NewMigrationDBRepo("bolt_migrations", testdb)
 	assert.Nil(t, err)
 
 	exists, err = testdb.TableExists("bolt_migrations")
@@ -31,7 +31,7 @@ func TestNewMigrationDBRepo_TableAlreadyExists(t *testing.T) {
 	_, err = testdb.Exec(`INSERT INTO bolt_migrations(id) VALUES (1);`)
 	assert.Nil(t, err)
 
-	_, err = repositories.NewMigrationDBRepo(testdb)
+	_, err = repositories.NewMigrationDBRepo("bolt_migrations", testdb)
 	assert.Nil(t, err)
 
 	var count int
@@ -46,7 +46,7 @@ func TestNewMigrationDBRepo_TableAlreadyExists(t *testing.T) {
 
 func TestList_EmptyTable(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 
 	migrations, err := repo.List()
@@ -56,7 +56,7 @@ func TestList_EmptyTable(t *testing.T) {
 
 func TestList_SingleResult(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 
 	version := "20230101000000"
@@ -75,7 +75,7 @@ func TestList_SingleResult(t *testing.T) {
 
 func TestList_ShortVersion(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 
 	version := "20230101"
@@ -94,7 +94,7 @@ func TestList_ShortVersion(t *testing.T) {
 
 func TestIsApplied_WithNotApplied(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 
 	version := "20230101010101"
@@ -105,7 +105,7 @@ func TestIsApplied_WithNotApplied(t *testing.T) {
 
 func TestIsApplied_WithApplied(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 
 	version := "20230101010101"
@@ -117,9 +117,24 @@ func TestIsApplied_WithApplied(t *testing.T) {
 	assert.Equal(t, applied, true)
 }
 
+func TestIsApplied_SQLInjectionAttempt(t *testing.T) {
+	db := bolttest.NewTestDB(t)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
+	assert.Nil(t, err)
+
+	version := "20230101010101'; DROP TABLE bolt_migrations; --"
+	applied, err := repo.IsApplied(version)
+	assert.Nil(t, err)
+	assert.Equal(t, applied, false)
+
+	exists, err := db.TableExists("bolt_migrations")
+	assert.Nil(t, err)
+	assert.True(t, exists)
+}
+
 func TestApply(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(testdb)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", testdb)
 	assert.Nil(t, err)
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
@@ -137,7 +152,7 @@ func TestApply(t *testing.T) {
 
 func TestApply_MalformedSql(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "test")
 
@@ -149,7 +164,7 @@ func TestApply_MalformedSql(t *testing.T) {
 
 func TestApplyWithTx_ExecErr(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "test")
 
@@ -160,7 +175,7 @@ func TestApplyWithTx_ExecErr(t *testing.T) {
 
 func TestApplyWithTx_SuccessfullyApplied(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(testdb)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", testdb)
 	assert.Nil(t, err)
 
 	migration := models.NewTimestampMigration(time.Now(), "test")
@@ -178,7 +193,7 @@ func TestApplyWithTx_SuccessfullyApplied(t *testing.T) {
 
 func TestRevert(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(testdb)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", testdb)
 	assert.Nil(t, err)
 
 	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
@@ -207,7 +222,7 @@ func TestRevert(t *testing.T) {
 
 func TestRevert_MalformedSql(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "test")
 	migration.Applied = true
@@ -219,7 +234,7 @@ func TestRevert_MalformedSql(t *testing.T) {
 
 func TestRevertWithTx_ExecErr(t *testing.T) {
 	db := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(db)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
 	assert.Nil(t, err)
 	migration := models.NewTimestampMigration(time.Now(), "test")
 
@@ -230,7 +245,7 @@ func TestRevertWithTx_ExecErr(t *testing.T) {
 
 func TestRevertWithTx_SuccessfullyReverted(t *testing.T) {
 	testdb := bolttest.NewTestDB(t)
-	repo, err := repositories.NewMigrationDBRepo(testdb)
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", testdb)
 	assert.Nil(t, err)
 
 	_, err = testdb.Exec(`CREATE TABLE tmp(id INT NOT NULL PRIMARY KEY)`)
@@ -255,4 +270,27 @@ func TestRevertWithTx_SuccessfullyReverted(t *testing.T) {
 	err = testdb.QueryRow("SELECT count(*) FROM bolt_migrations;").Scan(&count)
 	assert.Nil(t, err)
 	assert.Equal(t, count, 0)
+}
+
+func TestNewMigrationDBRepo_InvalidTableName(t *testing.T) {
+	db := bolttest.NewTestDB(t)
+	invalidTableNames := []string{
+		"bolt_migrations; DROP TABLE users; --", // SQL injection attempt
+		"bolt_migrations`",                      // Backtick is not allowed
+		"bolt_migrations'",                      // Single quote is not allowed
+		"bolt_migrations\"",                     // Double quote is not allowed
+		"bolt_migrations;",                      // Semicolon could terminate the SQL statement
+		"bolt_migrations\\",                     // Backslash is not allowed
+		"myschema..migrations_table",            // Double dot, which is invalid for schema.table format
+		"myschema.migrations_table.",            // Trailing dot is not allowed
+		"myschema.migrations_table;",            // Semicolon in schema-qualified name is not allowed
+		".migrations_table",                     // Leading dot is not allowed
+		"myschema.migrations_table$",            // Dollar sign is not allowed
+	}
+
+	for _, tableName := range invalidTableNames {
+		_, err := repositories.NewMigrationDBRepo(tableName, db)
+		assert.NotNil(t, err)
+		assert.ErrorContains(t, err, "invalid migration table name")
+	}
 }

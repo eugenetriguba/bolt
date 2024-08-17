@@ -3,6 +3,7 @@
 
 # Editors
 /.vscode
+/tags
 
 # Bolt CLI config/output
 /migrations

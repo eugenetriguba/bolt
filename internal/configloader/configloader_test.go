@@ -19,6 +19,7 @@ func TestNewConfigDefaults(t *testing.T) {
 
 	check.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
 	check.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleTimestamp)
+	check.Equal(t, cfg.Connection.MigrationsTable, "bolt_migrations")
 }
 
 func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
@@ -41,6 +42,7 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
 	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
 	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_DB_MIGRATIONS_TABLE")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
 	expectedCfg := configloader.Config{
@@ -49,12 +51,13 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 			VersionStyle:  configloader.VersionStyleSequential,
 		},
 		Connection: configloader.ConnectionConfig{
-			Host:     "testhost",
-			Port:     "1234",
-			User:     "testuser",
-			Password: "testpassword",
-			DBName:   "testdb",
-			Driver:   "postgresql",
+			Host:            "testhost",
+			Port:            "1234",
+			User:            "testuser",
+			Password:        "testpassword",
+			DBName:          "testdb",
+			Driver:          "postgresql",
+			MigrationsTable: "test_table",
 		},
 	}
 	tmpdir := t.TempDir()
@@ -74,12 +77,13 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 			VersionStyle:  configloader.VersionStyleSequential,
 		},
 		Connection: configloader.ConnectionConfig{
-			Host:     "testhost",
-			Port:     "1234",
-			User:     "testuser",
-			Password: "testpassword",
-			DBName:   "testdb",
-			Driver:   "mysql",
+			Host:            "testhost",
+			Port:            "1234",
+			User:            "testuser",
+			Password:        "testpassword",
+			DBName:          "testdb",
+			Driver:          "mysql",
+			MigrationsTable: "test_table",
 		},
 	}
 	bolttest.CreateConfigFile(t, &fileCfg, "bolt.toml")
@@ -90,12 +94,13 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 			VersionStyle:  configloader.VersionStyleTimestamp,
 		},
 		Connection: configloader.ConnectionConfig{
-			Host:     "envtesthost",
-			Port:     "4321",
-			User:     "envtestuser",
-			Password: "envtestpassword",
-			DBName:   "envtestdb",
-			Driver:   "postgresql",
+			Host:            "envtesthost",
+			Port:            "4321",
+			User:            "envtestuser",
+			Password:        "envtestpassword",
+			DBName:          "envtestdb",
+			Driver:          "postgresql",
+			MigrationsTable: "different_table",
 		},
 	}
 	t.Setenv("BOLT_MIGRATIONS_VERSION_STYLE", string(envCfg.Migrations.VersionStyle))
@@ -106,6 +111,7 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	t.Setenv("BOLT_DB_PASSWORD", envCfg.Connection.Password)
 	t.Setenv("BOLT_DB_NAME", envCfg.Connection.DBName)
 	t.Setenv("BOLT_DB_DRIVER", envCfg.Connection.Driver)
+	t.Setenv("BOLT_DB_MIGRATIONS_TABLE", envCfg.Connection.MigrationsTable)
 
 	cfg, err := configloader.NewConfig()
 	assert.Nil(t, err)
@@ -119,12 +125,16 @@ func TestNewConfigSearchesParentDirectories(t *testing.T) {
 	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
 	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
 	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_DB_MIGRATIONS_TABLE")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
 	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
 	expectedCfg := configloader.Config{
 		Migrations: configloader.MigrationsConfig{
 			DirectoryPath: "differentmigrationsdir",
 			VersionStyle:  configloader.VersionStyleSequential,
+		},
+		Connection: configloader.ConnectionConfig{
+			MigrationsTable: "migration_table",
 		},
 	}
 	tmpdir := t.TempDir()
