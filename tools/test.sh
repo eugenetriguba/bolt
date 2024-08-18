@@ -12,5 +12,5 @@ if [[ ! " ${ALLOWED_DB[@]} " =~ " $1 " ]]; then
   exit 1
 fi
 
-env $(cat "$BASE_DIR/.env.$1" | xargs) go test -p 1 -tags "$1" -cover ./...
+env $(cat "$BASE_DIR/.env.$1" | xargs) go test -p 1 -tags "$1" -cover -coverprofile cover.out ./...
 

@@ -662,6 +662,60 @@ func TestApplyMigration_ReadUpgradeScriptErr(t *testing.T) {
 	assert.ErrorIs(t, err, expectedErr)
 }
 
+func TestApplyMigration_ApplyWithTxErr(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadUpgradeScriptReturnValue: bolttest.ReadUpgradeScriptReturnValue{
+			Script: sqlparse.MigrationScript{
+				Options: sqlparse.ExecutionOptions{
+					UseTransaction: true,
+				},
+			},
+			Err: nil,
+		},
+	}
+	expectedErr := errors.New("error!")
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{
+		ApplyWithTxReturnValue: bolttest.ApplyWithTxReturnValue{Err: expectedErr},
+	}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.ApplyMigration(&models.Migration{})
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestApplyMigration_ApplyErr(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadUpgradeScriptReturnValue: bolttest.ReadUpgradeScriptReturnValue{
+			Script: sqlparse.MigrationScript{
+				Options: sqlparse.ExecutionOptions{
+					UseTransaction: false,
+				},
+			},
+			Err: nil,
+		},
+	}
+	expectedErr := errors.New("error!")
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{
+		ApplyReturnValue: bolttest.ApplyReturnValue{Err: expectedErr},
+	}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.ApplyMigration(&models.Migration{})
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
 func TestApplyAllMigrations_ListMigrationsErr(t *testing.T) {
 	expectedErr := errors.New("error!")
 	migrationFsRepo := &bolttest.MockMigrationFsRepo{
@@ -932,6 +986,60 @@ func TestRevertMigration_ReadUpgradeScriptErr(t *testing.T) {
 		},
 	}
 	migrationDbRepo := &bolttest.MockMigrationDBRepo{}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertMigration(&models.Migration{})
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestRevertMigration_RevertWithTxErr(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			Script: sqlparse.MigrationScript{
+				Options: sqlparse.ExecutionOptions{
+					UseTransaction: true,
+				},
+			},
+			Err: nil,
+		},
+	}
+	expectedErr := errors.New("error!")
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{
+		RevertWithTxReturnValue: bolttest.RevertWithTxReturnValue{Err: expectedErr},
+	}
+	svc := NewMigrationService(
+		migrationDbRepo,
+		migrationFsRepo,
+		configloader.Config{},
+		bolttest.NullOutputter{},
+	)
+
+	err := svc.RevertMigration(&models.Migration{})
+
+	assert.ErrorIs(t, err, expectedErr)
+}
+
+func TestRevertMigration_RevertErr(t *testing.T) {
+	migrationFsRepo := &bolttest.MockMigrationFsRepo{
+		ReadDowngradeScriptReturnValue: bolttest.ReadDowngradeScriptReturnValue{
+			Script: sqlparse.MigrationScript{
+				Options: sqlparse.ExecutionOptions{
+					UseTransaction: false,
+				},
+			},
+			Err: nil,
+		},
+	}
+	expectedErr := errors.New("error!")
+	migrationDbRepo := &bolttest.MockMigrationDBRepo{
+		RevertReturnValue: bolttest.RevertReturnValue{Err: expectedErr},
+	}
 	svc := NewMigrationService(
 		migrationDbRepo,
 		migrationFsRepo,
