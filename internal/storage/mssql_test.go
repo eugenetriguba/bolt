@@ -44,7 +44,7 @@ func TestMSSQL_ConvertGenericPlaceholders(t *testing.T) {
 	}
 }
 
-func TestMSSQL_TableExists(t *testing.T) {
+func TestMSSQL_TableExistsDefaultSchema(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	adapter := storage.MSSQLAdapter{}
 	db, err := sql.Open("sqlserver", adapter.CreateDSN(cfg))
@@ -69,6 +69,34 @@ func TestMSSQL_TableExists(t *testing.T) {
 	assert.True(t, exists)
 }
 
+func TestMSSQL_TableExistsCustomSchema(t *testing.T) {
+	cfg := bolttest.NewTestConnectionConfig()
+	adapter := storage.MSSQLAdapter{}
+	db, err := sql.Open("sqlserver", adapter.CreateDSN(cfg))
+	assert.Nil(t, err)
+
+	t.Cleanup(func() {
+		_, err := db.Exec("DROP TABLE IF EXISTS custom_schema.tmp;")
+		assert.Nil(t, err)
+		_, err = db.Exec("DROP SCHEMA IF EXISTS custom_schema;")
+		assert.Nil(t, err)
+		assert.Nil(t, db.Close())
+	})
+
+	exists, err := adapter.TableExists(db, "custom_schema.tmp")
+	assert.Nil(t, err)
+	assert.False(t, exists)
+
+	_, err = db.Exec("CREATE SCHEMA custom_schema;")
+	assert.Nil(t, err)
+
+	_, err = db.Exec("CREATE TABLE custom_schema.tmp(id INT PRIMARY KEY);")
+	assert.Nil(t, err)
+
+	exists, err = adapter.TableExists(db, "custom_schema.tmp")
+	assert.Nil(t, err)
+	assert.True(t, exists)
+}
 func TestMSSQL_DatabaseName(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	adapter := storage.MSSQLAdapter{}
