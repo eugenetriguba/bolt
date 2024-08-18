@@ -195,7 +195,7 @@ Apply your migration, which will execute the `upgrade.sql` script:
 ```bash
 $ bolt up
 Applying migration 20240316145038_my_first_migration..
-Successfully applied migration 20240316145038_my_first_migration!
+Successfully applied migration 20240316145038_my_first_migration in 3.217875ms!
 ```
 
 ### Checking Migration Status
@@ -237,7 +237,7 @@ To revert your migration:
 ```bash
 $ bolt down
 Reverting migration 20240316145038_my_first_migration..
-Successfully reverted migration 20240316145038_my_first_migration!
+Successfully reverted migration 20240316145038_my_first_migration in 6.283667ms!
 ```
 
 ### Verifying Migration Reversion
@@ -323,6 +323,9 @@ dbname =
 # The name of the database driver to use to connect to
 # the database. Either "postgresql", "mysql", "mssql", or "sqlite3".
 driver = 
+# The name of the database table to create for managing
+# the applied migration versions. Defaults to "bolt_migrations".
+migrations_table = "bolt_migrations"
 ```
 
 #### Environment Variables
@@ -337,6 +340,7 @@ All configuration file settings have corresponding environment variables.
 - `BOLT_DB_PASSWORD`
 - `BOLT_DB_NAME`
 - `BOLT_DB_DRIVER`
+- `BOLT_DB_MIGRATIONS_TABLE`
 
 ### Commands
 
@@ -443,3 +447,8 @@ This means that if you wanted to switch version styles, you could do it manually
 ### How is the migration message used?
 
 All migrations are created on the local filesystem in the format `<version>_<message>`. Bolt uses the `<version>` part of the name for keeping track of the migrations and how they should be applied or reverted. The `<message>` part is purely informational so you know what that migration is for.
+
+### What restrictions are there on the custom migration table?
+
+While you can configure the database table that bolt uses for keeping track of applied migrations, there are restrictions on the name that can be used. It must only contain alphanumeric or underscore characters (e.g. `my_custom_table`). Furthermore, it _may_ contain one dot (`.`) if you would like to specify a different schema (e.g. `different_schema.my_custom_table`).
+
