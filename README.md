@@ -62,6 +62,7 @@ It is distributed as a standalone binary, making it easy to run anywhere without
   - [What are Migration Version Styles?](#what-are-migration-version-styles)
   - [Why can't I change between version styles?](#why-cant-i-change-between-version-styles)
   - [How is the migration message used?](#how-is-the-migration-message-used)
+  - [What restrictions are there on the custom migration table?](#what-restrictions-are-there-on-the-custom-migration-table)
 
 ## Features
 
