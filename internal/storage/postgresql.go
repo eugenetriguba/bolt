@@ -29,19 +29,25 @@ func (p PostgresqlAdapter) TableExists(
 	tableName string,
 ) (bool, error) {
 	var exists bool
-	// Assumption: Anytime we check if a table exists, it will be
-	// for the 'public' schema. If someone wants to have bolt_migrations
-	// table outside of the 'public' schema on postgresql, this would be
-	// an issue.
+
+	schemaName := "public"
+	parts := strings.Split(tableName, ".")
+	if len(parts) == 2 {
+		schemaName = parts[0]
+		tableName = parts[1]
+	} else {
+		tableName = parts[0]
+	}
+
 	err := executor.QueryRow(`
 		SELECT EXISTS (
 			SELECT FROM pg_catalog.pg_class c
 			JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-			WHERE  n.nspname = 'public'
-			AND    c.relname = $1
+			WHERE  n.nspname = $1
+			AND    c.relname = $2
 			AND    c.relkind = 'r'  -- Only tables
 		);
-	`, tableName).Scan(&exists)
+	`, schemaName, tableName).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf(
 			"unable to check if %s exists: %w",

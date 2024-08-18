@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Using a database schema with a custom migration table (e.g. `my_schema.my_table`) would lead to the table attempting to get re-created each time bolt runs and failing because it already exists.
+
 ## [0.10.0] - 2024-08-18
 
 ### Added

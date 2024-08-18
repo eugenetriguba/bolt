@@ -451,5 +451,5 @@ All migrations are created on the local filesystem in the format `<version>_<mes
 
 ### What restrictions are there on the custom migration table?
 
-While you can configure the database table that bolt uses for keeping track of applied migrations, there are restrictions on the name that can be used. It must only contain alphanumeric or underscore characters (e.g. `my_custom_table`). Furthermore, it _may_ contain one dot (`.`) if you would like to specify a different schema (e.g. `different_schema.my_custom_table`).
+While you can configure the database table that bolt uses for keeping track of applied migrations, there are restrictions on the name that can be used. It must only contain alphanumeric or underscore characters (e.g. `my_custom_table`). Furthermore, it _may_ contain one dot (`.`) if you would like to specify a different schema (e.g. `different_schema.my_custom_table`). However, do note that using a custom schema is only support with MSSQL and PostgreSQL since MySQL and SQlite3 both don't support schemas.
 
