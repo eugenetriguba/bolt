@@ -31,17 +31,27 @@ func (m MSSQLAdapter) TableExists(
 	tableName string,
 ) (bool, error) {
 	var exists bool
+
+	schemaName := "dbo"
+	parts := strings.Split(tableName, ".")
+	if len(parts) == 2 {
+		schemaName = parts[0]
+		tableName = parts[1]
+	} else {
+		tableName = parts[0]
+	}
+
 	err := executor.QueryRow(`
 		SELECT CASE WHEN EXISTS (
 			SELECT * 
 			FROM INFORMATION_SCHEMA.TABLES 
-			WHERE TABLE_SCHEMA = 'dbo' 
-			AND TABLE_NAME = @p1
+			WHERE TABLE_SCHEMA = @p1
+			AND TABLE_NAME = @p2
 		) THEN 1 ELSE 0 END
-	`, tableName).Scan(&exists)
+	`, schemaName, tableName).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf(
-			"unable to check if dbo.%s exists: %w",
+			"unable to check if %s exists: %w",
 			tableName,
 			err,
 		)

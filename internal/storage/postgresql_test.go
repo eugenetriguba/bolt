@@ -44,7 +44,7 @@ func TestPostgresql_ConvertGenericPlaceholders(t *testing.T) {
 	}
 }
 
-func TestPostgresql_TableExists(t *testing.T) {
+func TestPostgresql_TableExistsDefaultSchema(t *testing.T) {
 	cfg := bolttest.NewTestConnectionConfig()
 	adapter := storage.PostgresqlAdapter{}
 	db, err := sql.Open("pgx", adapter.CreateDSN(cfg))
@@ -63,6 +63,29 @@ func TestPostgresql_TableExists(t *testing.T) {
 	assert.Nil(t, err)
 
 	exists, err = adapter.TableExists(db, "tmp")
+	assert.Nil(t, err)
+	assert.True(t, exists)
+}
+
+func TestPostgresql_TableExistsCustomSchema(t *testing.T) {
+	cfg := bolttest.NewTestConnectionConfig()
+	adapter := storage.PostgresqlAdapter{}
+	db, err := sql.Open("pgx", adapter.CreateDSN(cfg))
+	assert.Nil(t, err)
+	t.Cleanup(func() {
+		_, err = db.Exec("DROP SCHEMA IF EXISTS custom_schema CASCADE;")
+		assert.Nil(t, err)
+		assert.Nil(t, db.Close())
+	})
+
+	exists, err := adapter.TableExists(db, "custom_table.tmp")
+	assert.Nil(t, err)
+	assert.False(t, exists)
+
+	_, err = db.Exec("CREATE TABLE custom_schema.tmp(id INT PRIMARY KEY);")
+	assert.Nil(t, err)
+
+	exists, err = adapter.TableExists(db, "custom_schema.tmp")
 	assert.Nil(t, err)
 	assert.True(t, exists)
 }
