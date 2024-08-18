@@ -13,7 +13,7 @@
     <a href="https://codecov.io/gh/eugenetriguba/bolt" > 
         <img src="https://codecov.io/gh/eugenetriguba/bolt/graph/badge.svg?token=y8ZwsjjSQ3"/> 
     </a>
-    <img alt="Version Badge" src="https://img.shields.io/badge/version-0.10.0-blue" style="max-width:100%;">
+    <img alt="Version Badge" src="https://img.shields.io/badge/version-0.10.1-blue" style="max-width:100%;">
 </p>
 
 
