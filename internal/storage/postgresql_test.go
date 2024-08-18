@@ -82,6 +82,9 @@ func TestPostgresql_TableExistsCustomSchema(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, exists)
 
+	_, err = db.Exec("CREATE SCHEMA custom_schema;")
+	assert.Nil(t, err)
+
 	_, err = db.Exec("CREATE TABLE custom_schema.tmp(id INT PRIMARY KEY);")
 	assert.Nil(t, err)
 
