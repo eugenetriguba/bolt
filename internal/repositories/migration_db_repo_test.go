@@ -1,6 +1,8 @@
 package repositories_test
 
 import (
+	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
@@ -22,6 +24,31 @@ func TestNewMigrationDBRepo_CreatesTable(t *testing.T) {
 	exists, err = testdb.TableExists("bolt_migrations")
 	assert.Nil(t, err)
 	assert.True(t, exists)
+}
+
+func TestNewMigrationDBRepo_CreateTableExecError(t *testing.T) {
+	mockDB := &bolttest.MockDB{
+		TableExistsFunc: func(tableName string) (bool, error) {
+			return false, nil
+		},
+		ExecFunc: func(query string, args ...interface{}) (sql.Result, error) {
+			return nil, errors.New("exec error")
+		},
+	}
+	_, err := repositories.NewMigrationDBRepo("bolt_migrations", mockDB)
+	assert.NotNil(t, err)
+	assert.ErrorContains(t, err, "unable to create 'bolt_migrations' database table: exec error")
+}
+
+func TestNewMigrationDBRepo_TableExistsError(t *testing.T) {
+	mockDB := &bolttest.MockDB{
+		TableExistsFunc: func(tableName string) (bool, error) {
+			return false, errors.New("table exists failed")
+		},
+	}
+	_, err := repositories.NewMigrationDBRepo("bolt_migrations", mockDB)
+	assert.NotNil(t, err)
+	assert.ErrorContains(t, err, "unable to confirm 'bolt_migrations' database table exists: table exists failed")
 }
 
 func TestNewMigrationDBRepo_TableAlreadyExists(t *testing.T) {
