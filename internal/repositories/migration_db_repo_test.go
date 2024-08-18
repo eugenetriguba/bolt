@@ -81,6 +81,23 @@ func TestList_EmptyTable(t *testing.T) {
 	assert.Equal(t, len(migrations), 0)
 }
 
+func TestList_QueryError(t *testing.T) {
+	mockDB := &bolttest.MockDB{
+		TableExistsFunc: func(tableName string) (bool, error) {
+			return true, nil
+		},
+		QueryFunc: func(query string, args ...interface{}) (*sql.Rows, error) {
+			return nil, errors.New("query error")
+		},
+	}
+	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", mockDB)
+	assert.Nil(t, err)
+
+	_, err = repo.List()
+	assert.NotNil(t, err)
+	assert.ErrorContains(t, err, "unable to execute query to select versions from 'bolt_migrations' database table: query error")
+}
+
 func TestList_SingleResult(t *testing.T) {
 	db := bolttest.NewTestDB(t)
 	repo, err := repositories.NewMigrationDBRepo("bolt_migrations", db)
