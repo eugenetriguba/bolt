@@ -51,7 +51,7 @@ func (m *StatusCmd) Execute(
 	}
 	defer db.Close()
 
-	migrationDBRepo, err := repositories.NewMigrationDBRepo(db)
+	migrationDBRepo, err := repositories.NewMigrationDBRepo(cfg.Connection.MigrationsTable, db)
 	if err != nil {
 		consoleOutputter.Error(err)
 		return subcommands.ExitFailure

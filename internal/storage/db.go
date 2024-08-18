@@ -51,9 +51,20 @@ type sqlExecutor interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
-type DB struct {
+type TxFunc func(db DB) error
+
+type DB interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Tx(fn TxFunc) error
+	Close() error
+	TableExists(tableName string) (bool, error)
+}
+
+type SqlDB struct {
 	executor sqlExecutor
-	sqlDB    *sql.DB
+	conn     *sql.DB
 	adapter  DBAdapter
 }
 
@@ -69,12 +80,12 @@ type DB struct {
 func NewDB(cfg configloader.ConnectionConfig) (DB, error) {
 	driver, exists := supportedDrivers[cfg.Driver]
 	if !exists {
-		return DB{}, ErrUnsupportedDriver
+		return SqlDB{}, ErrUnsupportedDriver
 	}
 
 	db, err := sql.Open(driver.name, driver.adapter.CreateDSN(cfg))
 	if err != nil {
-		return DB{}, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
+		return SqlDB{}, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
 	}
 
 	// Note: `sql.Open` only validates the connection string we provided is sane.
@@ -82,50 +93,48 @@ func NewDB(cfg configloader.ConnectionConfig) (DB, error) {
 	// the database to ensure the connection string is fully valid.
 	err = db.Ping()
 	if err != nil {
-		return DB{}, fmt.Errorf("%w: %v", ErrUnableToConnect, err)
+		return SqlDB{}, fmt.Errorf("%w: %v", ErrUnableToConnect, err)
 	}
 
-	return DB{executor: db, sqlDB: db, adapter: driver.adapter}, nil
+	return SqlDB{executor: db, conn: db, adapter: driver.adapter}, nil
 }
 
 // Close closes the database connection. Any further
 // queries will result in errors, and you should call
 // NewDB again after if you'd like to run more.
-func (db DB) Close() error {
-	return db.sqlDB.Close()
+func (db SqlDB) Close() error {
+	return db.conn.Close()
 }
 
 // Exec is a wrapper around the sql.DB Exec.
-func (db DB) Exec(query string, args ...any) (sql.Result, error) {
+func (db SqlDB) Exec(query string, args ...any) (sql.Result, error) {
 	newQuery := db.adapter.ConvertGenericPlaceholders(query, len(args))
 	return db.executor.Exec(newQuery, args...)
 }
 
 // Query is a wrapper around the sql.DB Query.
-func (db DB) Query(query string, args ...any) (*sql.Rows, error) {
+func (db SqlDB) Query(query string, args ...any) (*sql.Rows, error) {
 	newQuery := db.adapter.ConvertGenericPlaceholders(query, len(args))
 	return db.executor.Query(newQuery, args...)
 }
 
 // QueryRow is a wrapper around the sql.DB QueryRow.
-func (db DB) QueryRow(query string, args ...any) *sql.Row {
+func (db SqlDB) QueryRow(query string, args ...any) *sql.Row {
 	newQuery := db.adapter.ConvertGenericPlaceholders(query, len(args))
 	return db.executor.QueryRow(newQuery, args...)
 }
 
 // TableExists checks if the tableName exists within the
 // database currently connected to.
-func (db DB) TableExists(tableName string) (bool, error) {
+func (db SqlDB) TableExists(tableName string) (bool, error) {
 	return db.adapter.TableExists(db.executor, tableName)
 }
-
-type txFunc func(db DB) error
 
 // Tx executes fn within a transaction block. If
 // fn returns an error, the transaction will be rolled
 // back. Otherwise, it will be committed.
-func (db *DB) Tx(fn txFunc) error {
-	tx, err := db.sqlDB.Begin()
+func (db SqlDB) Tx(fn TxFunc) error {
+	tx, err := db.conn.Begin()
 	if err != nil {
 		return fmt.Errorf(
 			"unable to start transaction: %w",
@@ -136,7 +145,7 @@ func (db *DB) Tx(fn txFunc) error {
 
 	// Create a shallow clone of the DB instance for
 	// the transaction scope with a tx executor.
-	txDB := *db
+	txDB := db
 	txDB.executor = tx
 
 	err = fn(txDB)

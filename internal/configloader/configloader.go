@@ -54,12 +54,13 @@ type MigrationsConfig struct {
 }
 
 type ConnectionConfig struct {
-	Host     string `toml:"host"     envconfig:"BOLT_DB_HOST"`
-	Port     string `toml:"port"     envconfig:"BOLT_DB_PORT"`
-	User     string `toml:"user"     envconfig:"BOLT_DB_USER"`
-	Password string `toml:"password" envconfig:"BOLT_DB_PASSWORD"`
-	DBName   string `toml:"dbname"   envconfig:"BOLT_DB_NAME"`
-	Driver   string `toml:"driver"   envconfig:"BOLT_DB_DRIVER"`
+	Host            string `toml:"host"     envconfig:"BOLT_DB_HOST"`
+	Port            string `toml:"port"     envconfig:"BOLT_DB_PORT"`
+	User            string `toml:"user"     envconfig:"BOLT_DB_USER"`
+	Password        string `toml:"password" envconfig:"BOLT_DB_PASSWORD"`
+	DBName          string `toml:"dbname"   envconfig:"BOLT_DB_NAME"`
+	Driver          string `toml:"driver"   envconfig:"BOLT_DB_DRIVER"`
+	MigrationsTable string `toml:"migrations_table" envconfig:"BOLT_DB_MIGRATIONS_TABLE"`
 }
 
 func NewConfig() (*Config, error) {
@@ -72,6 +73,9 @@ func NewConfig() (*Config, error) {
 		Migrations: MigrationsConfig{
 			DirectoryPath: "migrations",
 			VersionStyle:  VersionStyleTimestamp,
+		},
+		Connection: ConnectionConfig{
+			MigrationsTable: "bolt_migrations",
 		},
 	}
 	if !errors.Is(err, ErrConfigFileNotFound) {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/eugenetriguba/bolt/internal/models"
@@ -20,37 +21,59 @@ type MigrationDBRepo interface {
 }
 
 type migrationDBRepo struct {
-	db storage.DB
+	migrationTableName string
+	db                 storage.DB
 }
 
 // NewMigrationDBRepo initializes the MigrationDBRepo with a
 // database. Furthermore, it ensures the migration table it
 // operates on exists. If it is unable to create or confirm
 // the table exists, an error is returned.
-func NewMigrationDBRepo(db storage.DB) (MigrationDBRepo, error) {
-	migrationTableExists, err := db.TableExists("bolt_migrations")
+func NewMigrationDBRepo(migrationTableName string, db storage.DB) (MigrationDBRepo, error) {
+	err := sanitizeTableName(migrationTableName)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"unable to confirm bolt_migrations database table exists: %w",
+			"invalid migration table name: %w",
+			err,
+		)
+	}
+
+	migrationTableExists, err := db.TableExists(migrationTableName)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"unable to confirm '%s' database table exists: %w",
+			migrationTableName,
 			err,
 		)
 	}
 
 	if !migrationTableExists {
-		_, err := db.Exec(`
-			CREATE TABLE bolt_migrations(
+		_, err := db.Exec(fmt.Sprintf(`
+			CREATE TABLE %s (
 				version VARCHAR(255) PRIMARY KEY NOT NULL
 			);
-		`)
+		`, migrationTableName))
 		if err != nil {
 			return nil, fmt.Errorf(
-				"unable to create bolt_migrations database table: %w",
+				"unable to create '%s' database table: %w",
+				migrationTableName,
 				err,
 			)
 		}
 	}
 
-	return &migrationDBRepo{db: db}, nil
+	return &migrationDBRepo{migrationTableName: migrationTableName, db: db}, nil
+}
+
+func sanitizeTableName(tableName string) error {
+	// Allow alphanumeric characters, underscores, and a single dot for schema.table
+	validTableName := regexp.MustCompile(`^[a-zA-Z0-9_]+(\.[a-zA-Z0-9_]+)?$`)
+	if !validTableName.MatchString(tableName) {
+		return errors.New(
+			"a migration table name must only contain alphanumeric or underscore characters " +
+				"and optionally a single dot for schema-qualified names")
+	}
+	return nil
 }
 
 // List retrieves a map of migration models that can be
@@ -58,11 +81,12 @@ func NewMigrationDBRepo(db storage.DB) (MigrationDBRepo, error) {
 // will be ones that have been applied, and their message
 // will always be an empty string.
 func (mr migrationDBRepo) List() (map[string]*models.Migration, error) {
-	rows, err := mr.db.Query("SELECT version FROM bolt_migrations;")
+	rows, err := mr.db.Query(fmt.Sprintf("SELECT version FROM %s;", mr.migrationTableName))
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to execute query to select versions from "+
-				"bolt_migrations database table: %w",
+				"'%s' database table: %w",
+			mr.migrationTableName,
 			err,
 		)
 	}
@@ -99,7 +123,7 @@ func (mr migrationDBRepo) List() (map[string]*models.Migration, error) {
 // Check err first before looking at whether the version is applied.
 func (mr migrationDBRepo) IsApplied(version string) (bool, error) {
 	var scanResult int
-	err := mr.db.QueryRow("SELECT 1 FROM bolt_migrations WHERE version = ?", version).
+	err := mr.db.QueryRow(fmt.Sprintf("SELECT 1 FROM %s WHERE version = ?", mr.migrationTableName), version).
 		Scan(&scanResult)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
@@ -122,7 +146,7 @@ func (mr migrationDBRepo) Apply(
 	upgradeScript string,
 	migration *models.Migration,
 ) error {
-	err := applyMigration(mr.db, upgradeScript, *migration)
+	err := mr.applyMigration(upgradeScript, *migration)
 	if err != nil {
 		return err
 	}
@@ -138,7 +162,7 @@ func (mr migrationDBRepo) ApplyWithTx(
 	migration *models.Migration,
 ) error {
 	err := mr.db.Tx(func(db storage.DB) error {
-		err := applyMigration(db, upgradeScript, *migration)
+		err := mr.applyMigration(upgradeScript, *migration)
 		if err != nil {
 			return err
 		}
@@ -152,17 +176,16 @@ func (mr migrationDBRepo) ApplyWithTx(
 	return nil
 }
 
-func applyMigration(
-	db storage.DB,
+func (mr migrationDBRepo) applyMigration(
 	upgradeScript string,
 	migration models.Migration,
 ) error {
-	_, err := db.Exec(upgradeScript)
+	_, err := mr.db.Exec(upgradeScript)
 	if err != nil {
 		return fmt.Errorf("unable to execute upgrade script: %w", err)
 	}
 
-	_, err = db.Exec("INSERT INTO bolt_migrations(version) VALUES(?)", migration.Version)
+	_, err = mr.db.Exec(fmt.Sprintf("INSERT INTO %s(version) VALUES(?)", mr.migrationTableName), migration.Version)
 	if err != nil {
 		return fmt.Errorf(
 			"unable to insert migration: %w",
@@ -180,7 +203,7 @@ func (mr migrationDBRepo) Revert(
 	downgradeScript string,
 	migration *models.Migration,
 ) error {
-	err := revertMigration(mr.db, downgradeScript, *migration)
+	err := mr.revertMigration(downgradeScript, *migration)
 	if err != nil {
 		return err
 	}
@@ -196,7 +219,7 @@ func (mr migrationDBRepo) RevertWithTx(
 	migration *models.Migration,
 ) error {
 	err := mr.db.Tx(func(db storage.DB) error {
-		err := revertMigration(db, downgradeScript, *migration)
+		err := mr.revertMigration(downgradeScript, *migration)
 		if err != nil {
 			return err
 		}
@@ -210,20 +233,20 @@ func (mr migrationDBRepo) RevertWithTx(
 	return nil
 }
 
-func revertMigration(
-	db storage.DB,
+func (mr migrationDBRepo) revertMigration(
 	downgradeScript string,
 	migration models.Migration,
 ) error {
-	_, err := db.Exec(downgradeScript)
+	_, err := mr.db.Exec(downgradeScript)
 	if err != nil {
 		return fmt.Errorf("unable to execute downgrade script: %w", err)
 	}
 
-	_, err = db.Exec("DELETE FROM bolt_migrations WHERE version = ?", migration.Version)
+	_, err = mr.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE version = ?", mr.migrationTableName), migration.Version)
 	if err != nil {
 		return fmt.Errorf(
-			"unable to remove reverted migration from bolt_migrations table: %w",
+			"unable to remove reverted migration from %s table: %w",
+			mr.migrationTableName,
 			err,
 		)
 	}
