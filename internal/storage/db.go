@@ -12,37 +12,11 @@ import (
 	_ "github.com/microsoft/go-mssqldb"
 )
 
-var postgresqlDriverName = "postgresql"
-var mysqlDriverName = "mysql"
-var mssqlDriverName = "mssql"
-var sqliteDriverName = "sqlite3"
-
-var supportedDrivers = map[string]dbDriver{
-	postgresqlDriverName: {name: "pgx", adapter: PostgresqlAdapter{}},
-	mysqlDriverName:      {name: "mysql", adapter: MySQLAdapter{}},
-	mssqlDriverName:      {name: "sqlserver", adapter: MSSQLAdapter{}},
-	sqliteDriverName:     {name: "sqlite3", adapter: SqliteAdapter{}},
-}
-
-type dbDriver struct {
-	name    string
-	adapter DBAdapter
-}
-
 var (
 	ErrMalformedConnectionString = errors.New(
 		"malformed database connection parameters provided",
 	)
-	ErrUnableToConnect   = errors.New("unable to open connection to database")
-	ErrUnsupportedDriver = fmt.Errorf(
-		"unsupported driver, supported drivers are %s",
-		[]string{
-			postgresqlDriverName,
-			mysqlDriverName,
-			mssqlDriverName,
-			sqliteDriverName,
-		},
-	)
+	ErrUnableToConnect = errors.New("unable to open connection to database")
 )
 
 type sqlExecutor interface {
@@ -77,13 +51,13 @@ type SqlDB struct {
 //   - ErrUnableToConnect: Unable to make a connection to the database with
 //     the provided connection parameters.
 //   - ErrUnsupportedDriver: The provided driver is not supported.
-func NewDB(cfg configloader.ConnectionConfig) (DB, error) {
-	driver, exists := supportedDrivers[cfg.Driver]
-	if !exists {
-		return SqlDB{}, ErrUnsupportedDriver
+func NewDB(cfg configloader.DatabaseConfig) (DB, error) {
+	driver, err := NewDBDriverFromDSN(cfg.DSN)
+	if err != nil {
+		return SqlDB{}, fmt.Errorf("unable to determine driver from DSN %s: %w", cfg.DSN, err)
 	}
 
-	db, err := sql.Open(driver.name, driver.adapter.CreateDSN(cfg))
+	db, err := sql.Open(driver.name, cfg.DSN)
 	if err != nil {
 		return SqlDB{}, fmt.Errorf("%w: %v", ErrMalformedConnectionString, err)
 	}

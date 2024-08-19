@@ -41,25 +41,21 @@ var (
 // This can come from the TOML file or environment variables,
 // with environment variables taking precedence.
 type Config struct {
-	Migrations MigrationsConfig `toml:"migrations"`
-
-	// Information related to how to connect to the database
-	// that is desired to run migrations against.
-	Connection ConnectionConfig `toml:"database"`
+	Source   SourceConfig   `toml:"source"`
+	Database DatabaseConfig `toml:"database"`
 }
 
-type MigrationsConfig struct {
-	DirectoryPath string       `toml:"directory_path" envconfig:"BOLT_MIGRATIONS_DIR_PATH"`
-	VersionStyle  VersionStyle `toml:"version_style"  envconfig:"BOLT_MIGRATIONS_VERSION_STYLE"`
+type SourceConfig struct {
+	VersionStyle VersionStyle           `toml:"version_style"  envconfig:"BOLT_SOURCE_VERSION_STYLE"`
+	Filesystem   FilesystemSourceConfig `toml:"filesystem"`
 }
 
-type ConnectionConfig struct {
-	Host            string `toml:"host"     envconfig:"BOLT_DB_HOST"`
-	Port            string `toml:"port"     envconfig:"BOLT_DB_PORT"`
-	User            string `toml:"user"     envconfig:"BOLT_DB_USER"`
-	Password        string `toml:"password" envconfig:"BOLT_DB_PASSWORD"`
-	DBName          string `toml:"dbname"   envconfig:"BOLT_DB_NAME"`
-	Driver          string `toml:"driver"   envconfig:"BOLT_DB_DRIVER"`
+type FilesystemSourceConfig struct {
+	DirectoryPath string `toml:"directory_path" envconfig:"BOLT_SOURCE_FS_DIR_PATH"`
+}
+
+type DatabaseConfig struct {
+	DSN             string `toml:"dsn" envconfig:"BOLT_DB_DSN"`
 	MigrationsTable string `toml:"migrations_table" envconfig:"BOLT_DB_MIGRATIONS_TABLE"`
 }
 
@@ -70,11 +66,13 @@ func NewConfig() (*Config, error) {
 	}
 
 	cfg := Config{
-		Migrations: MigrationsConfig{
-			DirectoryPath: "migrations",
-			VersionStyle:  VersionStyleTimestamp,
+		Source: SourceConfig{
+			VersionStyle: VersionStyleTimestamp,
+			Filesystem: FilesystemSourceConfig{
+				DirectoryPath: "migrations",
+			},
 		},
-		Connection: ConnectionConfig{
+		Database: DatabaseConfig{
 			MigrationsTable: "bolt_migrations",
 		},
 	}
@@ -90,8 +88,8 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	if cfg.Migrations.VersionStyle != VersionStyleSequential &&
-		cfg.Migrations.VersionStyle != VersionStyleTimestamp {
+	if cfg.Source.VersionStyle != VersionStyleSequential &&
+		cfg.Source.VersionStyle != VersionStyleTimestamp {
 		return nil, ErrInvalidVersionStyle
 	}
 

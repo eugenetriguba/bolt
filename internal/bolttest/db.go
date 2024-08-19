@@ -12,14 +12,14 @@ import (
 )
 
 func NewTestDB(t *testing.T) storage.DB {
-	connectionConfig := NewTestConnectionConfig()
-	db, err := storage.NewDB(connectionConfig)
+	databaseConfig := NewDatabaseConfig()
+	db, err := storage.NewDB(databaseConfig)
 	assert.Nil(t, err)
 
-	DropTable(t, db, connectionConfig.MigrationsTable)
+	DropTable(t, db, databaseConfig.MigrationsTable)
 	DropTable(t, db, "tmp")
 	t.Cleanup(func() {
-		DropTable(t, db, connectionConfig.MigrationsTable)
+		DropTable(t, db, databaseConfig.MigrationsTable)
 		DropTable(t, db, "tmp")
 		assert.Nil(t, db.Close())
 	})
@@ -27,14 +27,9 @@ func NewTestDB(t *testing.T) storage.DB {
 	return db
 }
 
-func NewTestConnectionConfig() configloader.ConnectionConfig {
-	return configloader.ConnectionConfig{
-		Driver:          os.Getenv("BOLT_DB_DRIVER"),
-		DBName:          os.Getenv("BOLT_DB_NAME"),
-		Host:            os.Getenv("BOLT_DB_HOST"),
-		Port:            os.Getenv("BOLT_DB_PORT"),
-		User:            os.Getenv("BOLT_DB_USER"),
-		Password:        os.Getenv("BOLT_DB_PASSWORD"),
+func NewDatabaseConfig() configloader.DatabaseConfig {
+	return configloader.DatabaseConfig{
+		DSN:             os.Getenv("BOLT_DB_DSN"),
 		MigrationsTable: os.Getenv("BOLT_DB_MIGRATIONS_TABLE"),
 	}
 }

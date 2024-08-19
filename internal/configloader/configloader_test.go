@@ -17,16 +17,18 @@ func TestNewConfigDefaults(t *testing.T) {
 	cfg, err := configloader.NewConfig()
 	assert.Nil(t, err)
 
-	check.Equal(t, cfg.Migrations.DirectoryPath, "migrations")
-	check.Equal(t, cfg.Migrations.VersionStyle, configloader.VersionStyleTimestamp)
-	check.Equal(t, cfg.Connection.MigrationsTable, "bolt_migrations")
+	check.Equal(t, cfg.Source.Filesystem.DirectoryPath, "migrations")
+	check.Equal(t, cfg.Source.VersionStyle, configloader.VersionStyleTimestamp)
+	check.Equal(t, cfg.Database.MigrationsTable, "bolt_migrations")
 }
 
 func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
 	fileCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{
-			DirectoryPath: "myfancymigrations",
-			VersionStyle:  "invalid",
+		Source: configloader.SourceConfig{
+			VersionStyle: "invalid",
+			Filesystem: configloader.FilesystemSourceConfig{
+				DirectoryPath: "myfancymigrations",
+			},
 		},
 	}
 	bolttest.CreateConfigFile(t, &fileCfg, "bolt.toml")
@@ -36,27 +38,19 @@ func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
-	bolttest.UnsetEnv(t, "BOLT_DB_HOST")
-	bolttest.UnsetEnv(t, "BOLT_DB_PORT")
-	bolttest.UnsetEnv(t, "BOLT_DB_USER")
-	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
-	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
-	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_DB_DSN")
 	bolttest.UnsetEnv(t, "BOLT_DB_MIGRATIONS_TABLE")
-	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
-	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
+	bolttest.UnsetEnv(t, "BOLT_SOURCE_VERSION_STYLE")
+	bolttest.UnsetEnv(t, "BOLT_SOURCE_FS_DIR_PATH")
 	expectedCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{
-			DirectoryPath: "myfancymigrations",
-			VersionStyle:  configloader.VersionStyleSequential,
+		Source: configloader.SourceConfig{
+			VersionStyle: configloader.VersionStyleSequential,
+			Filesystem: configloader.FilesystemSourceConfig{
+				DirectoryPath: "myfancymigrations",
+			},
 		},
-		Connection: configloader.ConnectionConfig{
-			Host:            "testhost",
-			Port:            "1234",
-			User:            "testuser",
-			Password:        "testpassword",
-			DBName:          "testdb",
-			Driver:          "postgresql",
+		Database: configloader.DatabaseConfig{
+			DSN:             "postgresql://testuser:testpassword@testhost:1234/testdb",
 			MigrationsTable: "test_table",
 		},
 	}
@@ -72,46 +66,35 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 
 func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 	fileCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{
-			DirectoryPath: "cfgmigrations",
-			VersionStyle:  configloader.VersionStyleSequential,
+		Source: configloader.SourceConfig{
+			VersionStyle: configloader.VersionStyleSequential,
+			Filesystem: configloader.FilesystemSourceConfig{
+				DirectoryPath: "cfgmigrations",
+			},
 		},
-		Connection: configloader.ConnectionConfig{
-			Host:            "testhost",
-			Port:            "1234",
-			User:            "testuser",
-			Password:        "testpassword",
-			DBName:          "testdb",
-			Driver:          "mysql",
+		Database: configloader.DatabaseConfig{
+			DSN:             "mysql://testuser:testpassword@testhost:1234/testdb",
 			MigrationsTable: "test_table",
 		},
 	}
 	bolttest.CreateConfigFile(t, &fileCfg, "bolt.toml")
 
 	envCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{
-			DirectoryPath: "envmigrations",
-			VersionStyle:  configloader.VersionStyleTimestamp,
+		Source: configloader.SourceConfig{
+			VersionStyle: configloader.VersionStyleTimestamp,
+			Filesystem: configloader.FilesystemSourceConfig{
+				DirectoryPath: "envmigrations",
+			},
 		},
-		Connection: configloader.ConnectionConfig{
-			Host:            "envtesthost",
-			Port:            "4321",
-			User:            "envtestuser",
-			Password:        "envtestpassword",
-			DBName:          "envtestdb",
-			Driver:          "postgresql",
+		Database: configloader.DatabaseConfig{
+			DSN:             "postgresql://envtestuser:envtestpassword@envtesthost:4321/envtestdb",
 			MigrationsTable: "different_table",
 		},
 	}
-	t.Setenv("BOLT_MIGRATIONS_VERSION_STYLE", string(envCfg.Migrations.VersionStyle))
-	t.Setenv("BOLT_MIGRATIONS_DIR_PATH", envCfg.Migrations.DirectoryPath)
-	t.Setenv("BOLT_DB_HOST", envCfg.Connection.Host)
-	t.Setenv("BOLT_DB_PORT", envCfg.Connection.Port)
-	t.Setenv("BOLT_DB_USER", envCfg.Connection.User)
-	t.Setenv("BOLT_DB_PASSWORD", envCfg.Connection.Password)
-	t.Setenv("BOLT_DB_NAME", envCfg.Connection.DBName)
-	t.Setenv("BOLT_DB_DRIVER", envCfg.Connection.Driver)
-	t.Setenv("BOLT_DB_MIGRATIONS_TABLE", envCfg.Connection.MigrationsTable)
+	t.Setenv("BOLT_SOURCE_VERSION_STYLE", string(envCfg.Source.VersionStyle))
+	t.Setenv("BOLT_SOURCE_FS_DIR_PATH", envCfg.Source.Filesystem.DirectoryPath)
+	t.Setenv("BOLT_DB_DSN", envCfg.Database.DSN)
+	t.Setenv("BOLT_DB_MIGRATIONS_TABLE", envCfg.Database.MigrationsTable)
 
 	cfg, err := configloader.NewConfig()
 	assert.Nil(t, err)
@@ -119,21 +102,18 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 }
 
 func TestNewConfigSearchesParentDirectories(t *testing.T) {
-	bolttest.UnsetEnv(t, "BOLT_DB_HOST")
-	bolttest.UnsetEnv(t, "BOLT_DB_PORT")
-	bolttest.UnsetEnv(t, "BOLT_DB_USER")
-	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
-	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
-	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
+	bolttest.UnsetEnv(t, "BOLT_DB_DSN")
 	bolttest.UnsetEnv(t, "BOLT_DB_MIGRATIONS_TABLE")
-	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_DIR_PATH")
-	bolttest.UnsetEnv(t, "BOLT_MIGRATIONS_VERSION_STYLE")
+	bolttest.UnsetEnv(t, "BOLT_SOURCE_FS_DIR_PATH")
+	bolttest.UnsetEnv(t, "BOLT_SOURCE_VERSION_STYLE")
 	expectedCfg := configloader.Config{
-		Migrations: configloader.MigrationsConfig{
-			DirectoryPath: "differentmigrationsdir",
-			VersionStyle:  configloader.VersionStyleSequential,
+		Source: configloader.SourceConfig{
+			VersionStyle: configloader.VersionStyleSequential,
+			Filesystem: configloader.FilesystemSourceConfig{
+				DirectoryPath: "differentmigrationsdir",
+			},
 		},
-		Connection: configloader.ConnectionConfig{
+		Database: configloader.DatabaseConfig{
 			MigrationsTable: "migration_table",
 		},
 	}
