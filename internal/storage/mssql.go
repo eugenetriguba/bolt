@@ -2,7 +2,11 @@ package storage
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+
+	"github.com/eugenetriguba/bolt/internal/configloader"
+	"github.com/microsoft/go-mssqldb/msdsn"
 )
 
 type MSSQLAdapter struct{}
@@ -64,4 +68,21 @@ func (m MSSQLAdapter) DatabaseName(executor sqlExecutor) (string, error) {
 	}
 
 	return name, nil
+}
+
+func (m MSSQLAdapter) CreateDSN(cfg configloader.DatabaseConfig) string {
+	port, err := strconv.ParseUint(cfg.Port, 10, 64)
+	if err != nil {
+		// Use default port if we can't parse it out.
+		// The mssql driver requires an int port to be passed.
+		port = 1433
+	}
+	dsnCfg := msdsn.Config{
+		Host:     cfg.Host,
+		Port:     port,
+		User:     cfg.User,
+		Password: cfg.Password,
+		Database: cfg.DBName,
+	}
+	return dsnCfg.URL().String()
 }

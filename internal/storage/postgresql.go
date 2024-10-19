@@ -69,7 +69,7 @@ func (p PostgresqlAdapter) DatabaseName(executor sqlExecutor) (string, error) {
 	return name, nil
 }
 
-func (p PostgresqlAdapter) CreateDSN(cfg configloader.ConnectionConfig) string {
+func (p PostgresqlAdapter) CreateDSN(cfg configloader.DatabaseConfig) string {
 	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName,

@@ -42,7 +42,7 @@ func (s SqliteAdapter) DatabaseName(executor sqlExecutor) (string, error) {
 	return "main", nil
 }
 
-func (s SqliteAdapter) CreateDSN(cfg configloader.ConnectionConfig) string {
+func (s SqliteAdapter) CreateDSN(cfg configloader.DatabaseConfig) string {
 	// Note: Use the dbname as the sqlite db name/path
 	return cfg.DBName
 }

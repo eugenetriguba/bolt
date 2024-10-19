@@ -61,7 +61,7 @@ func (m MySQLAdapter) DatabaseName(executor sqlExecutor) (string, error) {
 	return name, nil
 }
 
-func (m MySQLAdapter) CreateDSN(cfg configloader.ConnectionConfig) string {
+func (m MySQLAdapter) CreateDSN(cfg configloader.DatabaseConfig) string {
 	addr := cfg.Host
 	if cfg.Port != "" {
 		addr += fmt.Sprintf(":%s", cfg.Port)

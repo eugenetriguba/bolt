@@ -38,7 +38,12 @@ func TestNewConfigWithInvalidVersionStyle(t *testing.T) {
 }
 
 func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
-	bolttest.UnsetEnv(t, "BOLT_DB_DSN")
+	bolttest.UnsetEnv(t, "BOLT_DB_HOST")
+	bolttest.UnsetEnv(t, "BOLT_DB_PORT")
+	bolttest.UnsetEnv(t, "BOLT_DB_USER")
+	bolttest.UnsetEnv(t, "BOLT_DB_PASSWORD")
+	bolttest.UnsetEnv(t, "BOLT_DB_NAME")
+	bolttest.UnsetEnv(t, "BOLT_DB_DRIVER")
 	bolttest.UnsetEnv(t, "BOLT_DB_MIGRATIONS_TABLE")
 	bolttest.UnsetEnv(t, "BOLT_SOURCE_VERSION_STYLE")
 	bolttest.UnsetEnv(t, "BOLT_SOURCE_FS_DIR_PATH")
@@ -50,7 +55,12 @@ func TestNewConfigFindsFileAndPopulatesConfigStruct(t *testing.T) {
 			},
 		},
 		Database: configloader.DatabaseConfig{
-			DSN:             "postgresql://testuser:testpassword@testhost:1234/testdb",
+			Host:            "testhost",
+			Port:            "1234",
+			User:            "testuser",
+			Password:        "testpassword",
+			DBName:          "testdb",
+			Driver:          "postgresql",
 			MigrationsTable: "test_table",
 		},
 	}
@@ -73,7 +83,12 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 			},
 		},
 		Database: configloader.DatabaseConfig{
-			DSN:             "mysql://testuser:testpassword@testhost:1234/testdb",
+			Host:            "testhost",
+			Port:            "1234",
+			User:            "testuser",
+			Password:        "testpassword",
+			DBName:          "testdb",
+			Driver:          "mysql",
 			MigrationsTable: "test_table",
 		},
 	}
@@ -87,13 +102,23 @@ func TestNewConfigCanBeOverridenByEnvVars(t *testing.T) {
 			},
 		},
 		Database: configloader.DatabaseConfig{
-			DSN:             "postgresql://envtestuser:envtestpassword@envtesthost:4321/envtestdb",
+			Host:            "envtesthost",
+			Port:            "4321",
+			User:            "envtestuser",
+			Password:        "envtestpassword",
+			DBName:          "envtestdb",
+			Driver:          "postgresql",
 			MigrationsTable: "different_table",
 		},
 	}
 	t.Setenv("BOLT_SOURCE_VERSION_STYLE", string(envCfg.Source.VersionStyle))
 	t.Setenv("BOLT_SOURCE_FS_DIR_PATH", envCfg.Source.Filesystem.DirectoryPath)
-	t.Setenv("BOLT_DB_DSN", envCfg.Database.DSN)
+	t.Setenv("BOLT_DB_HOST", envCfg.Database.Host)
+	t.Setenv("BOLT_DB_PORT", envCfg.Database.Port)
+	t.Setenv("BOLT_DB_USER", envCfg.Database.User)
+	t.Setenv("BOLT_DB_PASSWORD", envCfg.Database.Password)
+	t.Setenv("BOLT_DB_NAME", envCfg.Database.DBName)
+	t.Setenv("BOLT_DB_DRIVER", envCfg.Database.Driver)
 	t.Setenv("BOLT_DB_MIGRATIONS_TABLE", envCfg.Database.MigrationsTable)
 
 	cfg, err := configloader.NewConfig()

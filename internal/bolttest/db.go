@@ -29,7 +29,12 @@ func NewTestDB(t *testing.T) storage.DB {
 
 func NewDatabaseConfig() configloader.DatabaseConfig {
 	return configloader.DatabaseConfig{
-		DSN:             os.Getenv("BOLT_DB_DSN"),
+		Driver:          os.Getenv("BOLT_DB_DRIVER"),
+		DBName:          os.Getenv("BOLT_DB_NAME"),
+		Host:            os.Getenv("BOLT_DB_HOST"),
+		Port:            os.Getenv("BOLT_DB_PORT"),
+		User:            os.Getenv("BOLT_DB_USER"),
+		Password:        os.Getenv("BOLT_DB_PASSWORD"),
 		MigrationsTable: os.Getenv("BOLT_DB_MIGRATIONS_TABLE"),
 	}
 }

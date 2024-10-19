@@ -16,7 +16,7 @@ import (
 	"runtime"
 
 	"github.com/BurntSushi/toml"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/eugenetriguba/envelope"
 )
 
 type VersionStyle string
@@ -46,17 +46,22 @@ type Config struct {
 }
 
 type SourceConfig struct {
-	VersionStyle VersionStyle           `toml:"version_style"  envconfig:"BOLT_SOURCE_VERSION_STYLE"`
+	VersionStyle VersionStyle           `toml:"version_style"  env:"BOLT_SOURCE_VERSION_STYLE"`
 	Filesystem   FilesystemSourceConfig `toml:"filesystem"`
 }
 
 type FilesystemSourceConfig struct {
-	DirectoryPath string `toml:"directory_path" envconfig:"BOLT_SOURCE_FS_DIR_PATH"`
+	DirectoryPath string `toml:"directory_path" env:"BOLT_SOURCE_FS_DIR_PATH"`
 }
 
 type DatabaseConfig struct {
-	DSN             string `toml:"dsn" envconfig:"BOLT_DB_DSN"`
-	MigrationsTable string `toml:"migrations_table" envconfig:"BOLT_DB_MIGRATIONS_TABLE"`
+	Host            string `toml:"host"     env:"BOLT_DB_HOST"`
+	Port            string `toml:"port"     env:"BOLT_DB_PORT"`
+	User            string `toml:"user"     env:"BOLT_DB_USER"`
+	Password        string `toml:"password" env:"BOLT_DB_PASSWORD"`
+	DBName          string `toml:"dbname"   env:"BOLT_DB_NAME"`
+	Driver          string `toml:"driver"   env:"BOLT_DB_DRIVER"`
+	MigrationsTable string `toml:"migrations_table" env:"BOLT_DB_MIGRATIONS_TABLE"`
 }
 
 func NewConfig() (*Config, error) {
@@ -83,7 +88,9 @@ func NewConfig() (*Config, error) {
 		}
 	}
 
-	err = envconfig.Process("", &cfg)
+	fmt.Printf("Before load: %v\n", cfg)
+	err = envelope.LoadFromEnv(&cfg)
+	fmt.Printf("After load: %v\n", cfg)
 	if err != nil {
 		return nil, err
 	}
