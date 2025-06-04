@@ -11,6 +11,9 @@
 #   $ ./tools/db.sh stop <database-name>
 set +e
 
+SCRIPT_DIR=$(dirname "$0")
+. "$SCRIPT_DIR/lib.sh"
+
 BASE_DIR=$(dirname "$0")/..
 ALLOWED_DBS=("postgresql" "mysql" "mssql")
 ALLOWED_COMMANDS=("start" "stop")
@@ -39,21 +42,6 @@ function main() {
     exit 1
     ;;
   esac
-}
-
-# elementIn checks whether a element is in an array.
-#
-# Args:
-#   $1: The element
-#   $2: The array
-#
-# Returns:
-#   0 if the element is in the array; 1 otherwise.
-function elementIn() {
-  local e match="$1"
-  shift
-  for e; do [[ "$e" == "$match" ]] && return 0; done
-  return 1
 }
 
 main "$@"
